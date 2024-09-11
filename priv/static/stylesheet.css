@@ -1,0 +1,22 @@
+
+-- Scrollbar Stuff
+
+html {
+  scrollbar-width: thin; /* Makes the scrollbar thinner */
+  scrollbar-color: rgb(107, 33, 168) rgb(18, 18, 18); /* Thumb color and track color */
+}
+
+*::-webkit-scrollbar {
+    width: 15px;
+}
+
+*::-webkit-scrollbar-track {
+    background: rgb(18, 18, 18); /* Dark color */
+    border-radius: 0;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: rgb(107 33 168); /* Purple color */
+    border-radius: 0;
+    border: 3px solid rgb(18, 18, 18); /* Dark border */
+}
