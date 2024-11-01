@@ -43,9 +43,9 @@ fn update(model: Model, msg: Msg) -> #(Model, effect.Effect(Msg)) {
         msg.InvalidCommand(command) -> rend.render_text(mdl.error("Invalid Command: " <> command, model))
         msg.Reset                   -> #(mdl.Model(..model, input: "", output: [], output_q: []), effect.none())        
         //Text Rendering
-        msg.PrettyPrint(char, str)                  -> rend.pretty_print(char, str, model)      
+        msg.PrettyPrint(char, str)           -> rend.pretty_print(char, str, model)      
         msg.InitPrettyPrint(char, txt, mod)  -> rend.init_pretty_print(char, txt, mod)
-        msg.ChainPrint                              -> rend.render_text(model)
+        msg.ChainPrint                       -> rend.render_text(model)
         //Api Call
         msg.FetchedData(data)     -> rend.init_text_rendering(data, model)
         msg.FetchFailed           -> rend.render_text(mdl.serious_error("Failed to retrive data", model))
