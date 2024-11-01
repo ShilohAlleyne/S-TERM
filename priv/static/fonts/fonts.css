@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    @font-face {
+        font-family: 'Terminus';
+        src: url('./TerminessNerdFontMono-Regular.ttf') format('truetype'),
+        /* url('./fonts/Terminus-Regular.woff') format('woff'); */
+        font-weight: normal;
+        font-style: normal;
+    }
+}

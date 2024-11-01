@@ -1,6 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
--- Scrollbar Stuff
+/* input { */
+/*     caret-color: transparent; /1* Hide the default caret *1/ */
+/*     position: relative; */
+/* } */
 
+/* input::after { */
+/*     content: ''; */
+/*     position: absolute; */
+/*     width: 10px; /1* Adjust the width to make the cursor wider *1/ */
+/*     height: 1em; */
+/*     background-color: Purple; /1* Change the color as needed *1/ */
+/*     animation: blink 1s step-end infinite; */
+/*     pointer-events: none; */
+/* } */
+
+/* @keyframes blink { */
+/*     50% { */
+/*         opacity: 0; */
+/*     } */
+/* } */
+
+/* Terminus Font */
+@import '/priv/static/fonts/fonts.css';
+
+/* Scrollbar Stuff */
 html {
   scrollbar-width: thin; /* Makes the scrollbar thinner */
   scrollbar-color: rgb(107, 33, 168) rgb(18, 18, 18); /* Thumb color and track color */
@@ -20,3 +46,4 @@ html {
     border-radius: 0;
     border: 3px solid rgb(18, 18, 18); /* Dark border */
 }
+

@@ -1,9 +1,18 @@
+const defaults = require("tailwindcss/defaultTheme");
+
 module.exports = {
-    content: ["./index.html", "./src/**/*.{gleam,mjs}"],
+    content: [
+        "./index.html", 
+        "./src/**/*.{gleam,mjs}",
+        "./priv/static/stylesheet.css",
+        "./priv/static/fonts/*.css"
+    ],
     theme: {
         extend: {
             fontFamily: {
-                mono: ['"Fira Code"', 'Menlo', 'Monaco', 'Consolas', '"Liberation Mono"', '"Courier New"', 'monospace'],
+                mono: ['Terminus', ...defaults.fontFamily.mono],
+                terminus: ['Terminus', 'monospace'],
+                consolas: ['Consolas', 'monospace'],
             },
             dropShadow: {
                 'glow': [
@@ -11,10 +20,12 @@ module.exports = {
                     '0 0px 65px rgba(255, 255, 255, 0.2)',
                 ],
             },
+            fontSize: {
+                'smallish': '0.9rem',
+                'veryverysmall': '0.3rem',
+                'llg': '1.08rem'
+            }
         },
-        // colors: {
-        //     'dark-gray': '#121212',
-        // }
     },
     plugins: [],
 };
