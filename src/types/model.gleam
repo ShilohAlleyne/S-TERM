@@ -19,6 +19,7 @@ pub type State {
     Loading
     GO
     LoadingFailed
+    InputsLocked
 }
 
 pub fn init() -> Model {

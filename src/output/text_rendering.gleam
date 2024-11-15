@@ -109,12 +109,12 @@ pub fn init_text_rendering(data: data.JsonData, model: Model) -> #(Model, effect
                                 mdl.Model(..new_model, output_q: l.append(first, updated_last))
                             }
                             _ -> mdl.Model(..new_model, output_q: l.map(data.records, read_json) |> l.flatten) 
-                        }        
+                        }
                     }
                     _ -> mdl.Model(..new_model, output_q: [text.Text("Incorrect Flag: " <> model.flag.flag, "text-yellow-500", text.Span)])
                 }
             }
-        }       
+        }
     }
     render_text(new_new_model)
 }
@@ -122,7 +122,7 @@ pub fn init_text_rendering(data: data.JsonData, model: Model) -> #(Model, effect
 pub fn render_text(model: Model) -> #(Model, effect.Effect(Msg)) {
     // Read the output queque
     case model.output_q {
-        []              -> #(model, effect.none())
-        [first, ..rest] -> init_pretty_print("", first, mdl.Model(..model, output_q: rest))
+        []              -> #(mdl.Model(..model, state: mdl.GO), effect.none())
+        [first, ..rest] -> init_pretty_print("", first, mdl.Model(..model, state: mdl.InputsLocked, output_q: rest))
     }
 }

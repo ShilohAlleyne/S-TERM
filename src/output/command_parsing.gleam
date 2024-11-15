@@ -58,11 +58,10 @@ pub fn parse_input(model: Model) -> #(Model, effect.Effect(Msg)) {
     let new_model = mdl.Model(..model, input: "", output: l.append(model.output, runner))
     let args: List(String) = s.split(model.input, on: " ")
 
-    // lock the user from inputs if the model is still loading
+    // lock the user from inputs if the model isn't ready
     case model.state {
-        mdl.Loading -> #(model, effect.none())
-        mdl.LoadingFailed -> #(model, effect.none())
         mdl.GO -> parse_args(args, new_model)
+        _rest  -> #(model, effect.none())
     }
 }
 
@@ -84,7 +83,7 @@ fn create_runner(input: String) -> List(text.Text) {
 fn parse_args(args: List(String), new_model: Model) -> #(Model, effect.Effect(Msg)) {
     case args {
         ["clear", ..]    -> #(new_model, effect.from(fn(dispatch) { dispatch(msg.Reset) }))
-        ["print", ..str] -> #(new_model, effect.from(fn(dispatch) { dispatch(msg.InitPrettyPrint("", text.Text(s.join(str, " "), "", text.Span), new_model)) }))
+        ["print", ..str] -> rend.render_text (mdl.Model(..new_model, output_q: [text.Text(s.join(str, " "), "", text.Span)]))
         ["help", flag]   -> render_command_help(new_model, flag)
         ["help"]         -> rend.render_text(parse_help(new_model))
         ["cv"]           -> #(new_model, effect.from(fn(dispatch) { dispatch(msg.DownloadPDF)}))

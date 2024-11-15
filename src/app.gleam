@@ -10,8 +10,6 @@ import lustre/element/html as h
 import lustre/attribute as a
 import lustre/attribute.{class, id,autofocus}
 
-//import lucide_lustre.{library}
-
 import api/api
 import output/text_rendering as rend
 import output/command_parsing as cmd 
@@ -41,9 +39,9 @@ fn update(model: Model, msg: Msg) -> #(Model, effect.Effect(Msg)) {
         msg.KeyPress(key)           -> cmd.parse_keypress(key, model)
         msg.UpdateInput(value)      -> #(mdl.Model(..model, input: value), effect.none())
         msg.InvalidCommand(command) -> rend.render_text(mdl.error("Invalid Command: " <> command, model))
-        msg.Reset                   -> #(mdl.Model(..model, input: "", output: [], output_q: []), effect.none())        
+        msg.Reset                   -> #(mdl.Model(..model, input: "", output: [], output_q: []), effect.none())
         //Text Rendering
-        msg.PrettyPrint(char, str)           -> rend.pretty_print(char, str, model)      
+        msg.PrettyPrint(char, str)           -> rend.pretty_print(char, str, model)
         msg.InitPrettyPrint(char, txt, mod)  -> rend.init_pretty_print(char, txt, mod)
         msg.ChainPrint                       -> rend.render_text(model)
         //Api Call

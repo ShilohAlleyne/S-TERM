@@ -39,6 +39,7 @@ var List = class {
     }
     return desired === 0;
   }
+  // @internal
   countLength() {
     let length5 = 0;
     for (let _ of this)
@@ -242,6 +243,7 @@ function makeError(variant, module, line, fn, message, extra) {
   error2.gleam_error = variant;
   error2.module = module;
   error2.line = line;
+  error2.function = fn;
   error2.fn = fn;
   for (let k in extra)
     error2[k] = extra[k];
@@ -3719,6 +3721,8 @@ var GO = class extends CustomType {
 };
 var LoadingFailed = class extends CustomType {
 };
+var InputsLocked = class extends CustomType {
+};
 function init2() {
   return new Model2(
     new Loading(),
@@ -3821,11 +3825,11 @@ function fetch_json(api, dispatch) {
   let $ = to(api);
   if (!$.isOk()) {
     throw makeError(
-      "assignment_no_match",
+      "let_assert",
       "api/api",
       12,
       "fetch_json",
-      "Assignment pattern did not match",
+      "Pattern match failed, no pattern matched the value.",
       { value: $ }
     );
   }
@@ -3938,11 +3942,11 @@ function get_commands(dispatch) {
   let $ = to("https://api.jsonbin.io/v3/b/670da6a9acd3cb34a89703a7");
   if (!$.isOk()) {
     throw makeError(
-      "assignment_no_match",
+      "let_assert",
       "api/api",
       82,
       "get_commands",
-      "Assignment pattern did not match",
+      "Pattern match failed, no pattern matched the value.",
       { value: $ }
     );
   }
@@ -4096,13 +4100,8 @@ var scrollToBottom = (divId) => {
     behavior: "smooth"
   });
 };
-function downloadPDF() {
-  const link = document.createElement("a");
-  link.href = "../../priv/static/cv/CV Final.pdf";
-  link.download = "CV Final.pdf";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+function openPDFInNewTab() {
+  window.open("https://drive.google.com/file/d/1HJDEvwinORrVlJk80oL7NdPjmKcAhzO9/view", "_blank");
 }
 
 // build/dev/javascript/app/output/text_rendering.mjs
@@ -4122,11 +4121,11 @@ function pretty_print(char, str, model) {
   let recent = $[1];
   if (!recent.hasLength(1)) {
     throw makeError(
-      "assignment_no_match",
+      "let_assert",
       "output/text_rendering",
       36,
       "pretty_print",
-      "Assignment pattern did not match",
+      "Pattern match failed, no pattern matched the value.",
       { value: recent }
     );
   }
@@ -4252,11 +4251,15 @@ function find_by_title(title, rec) {
 function render_text(model) {
   let $ = model.output_q;
   if ($.hasLength(0)) {
-    return [model, none()];
+    return [model.withFields({ state: new GO() }), none()];
   } else {
     let first3 = $.head;
     let rest = $.tail;
-    return init_pretty_print("", first3, model.withFields({ output_q: rest }));
+    return init_pretty_print(
+      "",
+      first3,
+      model.withFields({ state: new InputsLocked(), output_q: rest })
+    );
   }
 }
 function init_text_rendering(data, model) {
@@ -4698,20 +4701,13 @@ function parse_args(args, new_model) {
     ];
   } else if (args.atLeastLength(1) && args.head === "print") {
     let str = args.tail;
-    return [
-      new_model,
-      from(
-        (dispatch) => {
-          return dispatch(
-            new InitPrettyPrint(
-              "",
-              new Text2(join2(str, " "), "", new Span()),
-              new_model
-            )
-          );
-        }
-      )
-    ];
+    return render_text(
+      new_model.withFields({
+        output_q: toList([
+          new Text2(join2(str, " "), "", new Span())
+        ])
+      })
+    );
   } else if (args.hasLength(2) && args.head === "help") {
     let flag = args.tail.head;
     return render_command_help(new_model, flag);
@@ -4750,12 +4746,10 @@ function parse_input(model) {
   });
   let args = split4(model.input, " ");
   let $ = model.state;
-  if ($ instanceof Loading) {
-    return [model, none()];
-  } else if ($ instanceof LoadingFailed) {
-    return [model, none()];
-  } else {
+  if ($ instanceof GO) {
     return parse_args(args, new_model);
+  } else {
+    return [model, none()];
   }
 }
 function parse_keypress(key, model) {
@@ -4806,7 +4800,7 @@ function parse_keypress(key, model) {
 
 // build/dev/javascript/app/output/pdf_download.mjs
 function download_pdf(model) {
-  downloadPDF();
+  openPDFInNewTab();
   let output_msg = toList([
     new Text2("PDF Downloaded.", "text-green-500", new Span())
   ]);
@@ -5054,11 +5048,11 @@ function main() {
   let $ = start2(app, "#app", void 0);
   if (!$.isOk()) {
     throw makeError(
-      "assignment_no_match",
+      "let_assert",
       "app",
-      26,
+      24,
       "main",
-      "Assignment pattern did not match",
+      "Pattern match failed, no pattern matched the value.",
       { value: $ }
     );
   }
