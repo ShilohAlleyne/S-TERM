@@ -109,11 +109,6 @@ var BitArray = class _BitArray {
     return new _BitArray(this.buffer.slice(index5));
   }
 };
-var UtfCodepoint = class {
-  constructor(value3) {
-    this.value = value3;
-  }
-};
 function byteArrayToInt(byteArray, start3, end, isBigEndian, isSigned) {
   let value3 = 0;
   if (isBigEndian) {
@@ -173,10 +168,10 @@ var Error = class extends Result {
   }
 };
 function isEqual(x, y) {
-  let values = [x, y];
-  while (values.length) {
-    let a2 = values.pop();
-    let b = values.pop();
+  let values2 = [x, y];
+  while (values2.length) {
+    let a2 = values2.pop();
+    let b = values2.pop();
     if (a2 === b)
       continue;
     if (!isObject(a2) || !isObject(b))
@@ -196,7 +191,7 @@ function isEqual(x, y) {
     }
     let [keys2, get2] = getters(a2);
     for (let k of keys2(a2)) {
-      values.push(get2(a2, k), get2(b, k));
+      values2.push(get2(a2, k), get2(b, k));
     }
   }
   return true;
@@ -291,6 +286,26 @@ function map(option, fun) {
     return new None();
   }
 }
+function do_values(list3, acc) {
+  if (list3.hasLength(0)) {
+    return acc;
+  } else {
+    let x = list3.head;
+    let xs = list3.tail;
+    let accumulate = (acc2, item) => {
+      if (item instanceof Some) {
+        let value3 = item[0];
+        return prepend(value3, acc2);
+      } else {
+        return acc2;
+      }
+    };
+    return accumulate(do_values(xs, acc), x);
+  }
+}
+function values(options) {
+  return do_values(options, toList([]));
+}
 
 // build/dev/javascript/gleam_stdlib/gleam/regex.mjs
 var Match = class extends CustomType {
@@ -337,409 +352,8 @@ function max(a2, b) {
   }
 }
 
-// build/dev/javascript/gleam_stdlib/gleam/pair.mjs
-function second(pair) {
-  let a2 = pair[1];
-  return a2;
-}
-
-// build/dev/javascript/gleam_stdlib/gleam/list.mjs
-function count_length(loop$list, loop$count) {
-  while (true) {
-    let list3 = loop$list;
-    let count = loop$count;
-    if (list3.atLeastLength(1)) {
-      let list$1 = list3.tail;
-      loop$list = list$1;
-      loop$count = count + 1;
-    } else {
-      return count;
-    }
-  }
-}
-function length2(list3) {
-  return count_length(list3, 0);
-}
-function do_reverse(loop$remaining, loop$accumulator) {
-  while (true) {
-    let remaining = loop$remaining;
-    let accumulator = loop$accumulator;
-    if (remaining.hasLength(0)) {
-      return accumulator;
-    } else {
-      let item = remaining.head;
-      let rest$1 = remaining.tail;
-      loop$remaining = rest$1;
-      loop$accumulator = prepend(item, accumulator);
-    }
-  }
-}
-function reverse(xs) {
-  return do_reverse(xs, toList([]));
-}
-function is_empty(list3) {
-  return isEqual(list3, toList([]));
-}
-function first(list3) {
-  if (list3.hasLength(0)) {
-    return new Error(void 0);
-  } else {
-    let x = list3.head;
-    return new Ok(x);
-  }
-}
-function do_filter(loop$list, loop$fun, loop$acc) {
-  while (true) {
-    let list3 = loop$list;
-    let fun = loop$fun;
-    let acc = loop$acc;
-    if (list3.hasLength(0)) {
-      return reverse(acc);
-    } else {
-      let x = list3.head;
-      let xs = list3.tail;
-      let new_acc = (() => {
-        let $ = fun(x);
-        if ($) {
-          return prepend(x, acc);
-        } else {
-          return acc;
-        }
-      })();
-      loop$list = xs;
-      loop$fun = fun;
-      loop$acc = new_acc;
-    }
-  }
-}
-function filter(list3, predicate) {
-  return do_filter(list3, predicate, toList([]));
-}
-function do_map(loop$list, loop$fun, loop$acc) {
-  while (true) {
-    let list3 = loop$list;
-    let fun = loop$fun;
-    let acc = loop$acc;
-    if (list3.hasLength(0)) {
-      return reverse(acc);
-    } else {
-      let x = list3.head;
-      let xs = list3.tail;
-      loop$list = xs;
-      loop$fun = fun;
-      loop$acc = prepend(fun(x), acc);
-    }
-  }
-}
-function map2(list3, fun) {
-  return do_map(list3, fun, toList([]));
-}
-function do_try_map(loop$list, loop$fun, loop$acc) {
-  while (true) {
-    let list3 = loop$list;
-    let fun = loop$fun;
-    let acc = loop$acc;
-    if (list3.hasLength(0)) {
-      return new Ok(reverse(acc));
-    } else {
-      let x = list3.head;
-      let xs = list3.tail;
-      let $ = fun(x);
-      if ($.isOk()) {
-        let y = $[0];
-        loop$list = xs;
-        loop$fun = fun;
-        loop$acc = prepend(y, acc);
-      } else {
-        let error2 = $[0];
-        return new Error(error2);
-      }
-    }
-  }
-}
-function try_map(list3, fun) {
-  return do_try_map(list3, fun, toList([]));
-}
-function drop(loop$list, loop$n) {
-  while (true) {
-    let list3 = loop$list;
-    let n = loop$n;
-    let $ = n <= 0;
-    if ($) {
-      return list3;
-    } else {
-      if (list3.hasLength(0)) {
-        return toList([]);
-      } else {
-        let xs = list3.tail;
-        loop$list = xs;
-        loop$n = n - 1;
-      }
-    }
-  }
-}
-function do_take(loop$list, loop$n, loop$acc) {
-  while (true) {
-    let list3 = loop$list;
-    let n = loop$n;
-    let acc = loop$acc;
-    let $ = n <= 0;
-    if ($) {
-      return reverse(acc);
-    } else {
-      if (list3.hasLength(0)) {
-        return reverse(acc);
-      } else {
-        let x = list3.head;
-        let xs = list3.tail;
-        loop$list = xs;
-        loop$n = n - 1;
-        loop$acc = prepend(x, acc);
-      }
-    }
-  }
-}
-function take(list3, n) {
-  return do_take(list3, n, toList([]));
-}
-function do_append(loop$first, loop$second) {
-  while (true) {
-    let first3 = loop$first;
-    let second2 = loop$second;
-    if (first3.hasLength(0)) {
-      return second2;
-    } else {
-      let item = first3.head;
-      let rest$1 = first3.tail;
-      loop$first = rest$1;
-      loop$second = prepend(item, second2);
-    }
-  }
-}
-function append2(first3, second2) {
-  return do_append(reverse(first3), second2);
-}
-function reverse_and_prepend(loop$prefix, loop$suffix) {
-  while (true) {
-    let prefix = loop$prefix;
-    let suffix = loop$suffix;
-    if (prefix.hasLength(0)) {
-      return suffix;
-    } else {
-      let first$1 = prefix.head;
-      let rest$1 = prefix.tail;
-      loop$prefix = rest$1;
-      loop$suffix = prepend(first$1, suffix);
-    }
-  }
-}
-function do_concat(loop$lists, loop$acc) {
-  while (true) {
-    let lists = loop$lists;
-    let acc = loop$acc;
-    if (lists.hasLength(0)) {
-      return reverse(acc);
-    } else {
-      let list3 = lists.head;
-      let further_lists = lists.tail;
-      loop$lists = further_lists;
-      loop$acc = reverse_and_prepend(list3, acc);
-    }
-  }
-}
-function flatten(lists) {
-  return do_concat(lists, toList([]));
-}
-function fold(loop$list, loop$initial, loop$fun) {
-  while (true) {
-    let list3 = loop$list;
-    let initial = loop$initial;
-    let fun = loop$fun;
-    if (list3.hasLength(0)) {
-      return initial;
-    } else {
-      let x = list3.head;
-      let rest$1 = list3.tail;
-      loop$list = rest$1;
-      loop$initial = fun(initial, x);
-      loop$fun = fun;
-    }
-  }
-}
-function fold_right(list3, initial, fun) {
-  if (list3.hasLength(0)) {
-    return initial;
-  } else {
-    let x = list3.head;
-    let rest$1 = list3.tail;
-    return fun(fold_right(rest$1, initial, fun), x);
-  }
-}
-function do_index_fold(loop$over, loop$acc, loop$with, loop$index) {
-  while (true) {
-    let over = loop$over;
-    let acc = loop$acc;
-    let with$ = loop$with;
-    let index5 = loop$index;
-    if (over.hasLength(0)) {
-      return acc;
-    } else {
-      let first$1 = over.head;
-      let rest$1 = over.tail;
-      loop$over = rest$1;
-      loop$acc = with$(acc, first$1, index5);
-      loop$with = with$;
-      loop$index = index5 + 1;
-    }
-  }
-}
-function index_fold(over, initial, fun) {
-  return do_index_fold(over, initial, fun, 0);
-}
-function find_map(loop$haystack, loop$fun) {
-  while (true) {
-    let haystack = loop$haystack;
-    let fun = loop$fun;
-    if (haystack.hasLength(0)) {
-      return new Error(void 0);
-    } else {
-      let x = haystack.head;
-      let rest$1 = haystack.tail;
-      let $ = fun(x);
-      if ($.isOk()) {
-        let x$1 = $[0];
-        return new Ok(x$1);
-      } else {
-        loop$haystack = rest$1;
-        loop$fun = fun;
-      }
-    }
-  }
-}
-function do_intersperse(loop$list, loop$separator, loop$acc) {
-  while (true) {
-    let list3 = loop$list;
-    let separator = loop$separator;
-    let acc = loop$acc;
-    if (list3.hasLength(0)) {
-      return reverse(acc);
-    } else {
-      let x = list3.head;
-      let rest$1 = list3.tail;
-      loop$list = rest$1;
-      loop$separator = separator;
-      loop$acc = prepend(x, prepend(separator, acc));
-    }
-  }
-}
-function intersperse(list3, elem) {
-  if (list3.hasLength(0)) {
-    return list3;
-  } else if (list3.hasLength(1)) {
-    return list3;
-  } else {
-    let x = list3.head;
-    let rest$1 = list3.tail;
-    return do_intersperse(rest$1, elem, toList([x]));
-  }
-}
-function do_repeat(loop$a, loop$times, loop$acc) {
-  while (true) {
-    let a2 = loop$a;
-    let times = loop$times;
-    let acc = loop$acc;
-    let $ = times <= 0;
-    if ($) {
-      return acc;
-    } else {
-      loop$a = a2;
-      loop$times = times - 1;
-      loop$acc = prepend(a2, acc);
-    }
-  }
-}
-function repeat2(a2, times) {
-  return do_repeat(a2, times, toList([]));
-}
-function do_split(loop$list, loop$n, loop$taken) {
-  while (true) {
-    let list3 = loop$list;
-    let n = loop$n;
-    let taken = loop$taken;
-    let $ = n <= 0;
-    if ($) {
-      return [reverse(taken), list3];
-    } else {
-      if (list3.hasLength(0)) {
-        return [reverse(taken), toList([])];
-      } else {
-        let x = list3.head;
-        let xs = list3.tail;
-        loop$list = xs;
-        loop$n = n - 1;
-        loop$taken = prepend(x, taken);
-      }
-    }
-  }
-}
-function split(list3, index5) {
-  return do_split(list3, index5, toList([]));
-}
-function do_split_while(loop$list, loop$f, loop$acc) {
-  while (true) {
-    let list3 = loop$list;
-    let f = loop$f;
-    let acc = loop$acc;
-    if (list3.hasLength(0)) {
-      return [reverse(acc), toList([])];
-    } else {
-      let x = list3.head;
-      let xs = list3.tail;
-      let $ = f(x);
-      if (!$) {
-        return [reverse(acc), list3];
-      } else {
-        loop$list = xs;
-        loop$f = f;
-        loop$acc = prepend(x, acc);
-      }
-    }
-  }
-}
-function split_while(list3, predicate) {
-  return do_split_while(list3, predicate, toList([]));
-}
-function key_find(keyword_list, desired_key) {
-  return find_map(
-    keyword_list,
-    (keyword) => {
-      let key = keyword[0];
-      let value3 = keyword[1];
-      let $ = isEqual(key, desired_key);
-      if ($) {
-        return new Ok(value3);
-      } else {
-        return new Error(void 0);
-      }
-    }
-  );
-}
-function key_set(list3, key, value3) {
-  if (list3.hasLength(0)) {
-    return toList([[key, value3]]);
-  } else if (list3.atLeastLength(1) && isEqual(list3.head[0], key)) {
-    let k = list3.head[0];
-    let rest$1 = list3.tail;
-    return prepend([key, value3], rest$1);
-  } else {
-    let first$1 = list3.head;
-    let rest$1 = list3.tail;
-    return prepend(first$1, key_set(rest$1, key, value3));
-  }
-}
-
 // build/dev/javascript/gleam_stdlib/gleam/result.mjs
-function map3(result, fun) {
+function map2(result, fun) {
   if (result.isOk()) {
     let x = result[0];
     return new Ok(fun(x));
@@ -793,8 +407,80 @@ function from_string(string4) {
 function to_string3(builder) {
   return identity(builder);
 }
-function split3(iodata, pattern) {
-  return split2(iodata, pattern);
+function split2(iodata, pattern) {
+  return split(iodata, pattern);
+}
+
+// build/dev/javascript/gleam_stdlib/gleam/string.mjs
+function length2(string4) {
+  return string_length(string4);
+}
+function replace(string4, pattern, substitute) {
+  let _pipe = string4;
+  let _pipe$1 = from_string(_pipe);
+  let _pipe$2 = string_replace(_pipe$1, pattern, substitute);
+  return to_string3(_pipe$2);
+}
+function lowercase2(string4) {
+  return lowercase(string4);
+}
+function starts_with2(string4, prefix) {
+  return starts_with(string4, prefix);
+}
+function concat2(strings) {
+  let _pipe = strings;
+  let _pipe$1 = from_strings(_pipe);
+  return to_string3(_pipe$1);
+}
+function join2(strings, separator) {
+  return join(strings, separator);
+}
+function pop_grapheme2(string4) {
+  return pop_grapheme(string4);
+}
+function do_slice(string4, idx, len) {
+  let _pipe = string4;
+  let _pipe$1 = graphemes(_pipe);
+  let _pipe$2 = drop(_pipe$1, idx);
+  let _pipe$3 = take2(_pipe$2, len);
+  return concat2(_pipe$3);
+}
+function slice(string4, idx, len) {
+  let $ = len < 0;
+  if ($) {
+    return "";
+  } else {
+    let $1 = idx < 0;
+    if ($1) {
+      let translated_idx = length2(string4) + idx;
+      let $2 = translated_idx < 0;
+      if ($2) {
+        return "";
+      } else {
+        return do_slice(string4, translated_idx, len);
+      }
+    } else {
+      return do_slice(string4, idx, len);
+    }
+  }
+}
+function drop_left(string4, num_graphemes) {
+  let $ = num_graphemes < 0;
+  if ($) {
+    return string4;
+  } else {
+    return slice(string4, num_graphemes, length2(string4) - num_graphemes);
+  }
+}
+function split3(x, substring) {
+  if (substring === "") {
+    return graphemes(x);
+  } else {
+    let _pipe = x;
+    let _pipe$1 = from_string(_pipe);
+    let _pipe$2 = split2(_pipe$1, substring);
+    return map3(_pipe$2, to_string3);
+  }
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/dynamic.mjs
@@ -841,7 +527,7 @@ function push_path(error2, name) {
   let name$1 = identity(name);
   let decoder = any(
     toList([string, (x) => {
-      return map3(int(x), to_string2);
+      return map2(int(x), to_string2);
     }])
   );
   let name$2 = (() => {
@@ -878,7 +564,7 @@ function map_errors(result, f) {
   return map_error(
     result,
     (_capture) => {
-      return map2(_capture, f);
+      return map3(_capture, f);
     }
   );
 }
@@ -1618,6 +1304,16 @@ function parse_int(value3) {
 function to_string(term) {
   return term.toString();
 }
+function string_replace(string4, target, substitute) {
+  if (typeof string4.replaceAll !== "undefined") {
+    return string4.replaceAll(target, substitute);
+  }
+  return string4.replace(
+    // $& means the whole matched string
+    new RegExp(target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
+    substitute
+  );
+}
 function string_length(string4) {
   if (string4 === "") {
     return 0;
@@ -1663,7 +1359,7 @@ function pop_grapheme(string4) {
 function lowercase(string4) {
   return string4.toLowerCase();
 }
-function split2(xs, pattern) {
+function split(xs, pattern) {
   return List.fromArray(xs.split(pattern));
 }
 function join(xs, separator) {
@@ -1711,15 +1407,6 @@ var unicode_whitespaces = [
 ].join("");
 var left_trim_regex = new RegExp(`^([${unicode_whitespaces}]*)`, "g");
 var right_trim_regex = new RegExp(`([${unicode_whitespaces}]*)$`, "g");
-function print_debug(string4) {
-  if (typeof process === "object" && process.stderr?.write) {
-    process.stderr.write(string4 + "\n");
-  } else if (typeof Deno === "object") {
-    Deno.stderr.writeSync(new TextEncoder().encode(string4 + "\n"));
-  } else {
-    console.log(string4);
-  }
-}
 function compile_regex(pattern, options) {
   try {
     let flags = "gu";
@@ -1837,117 +1524,6 @@ function try_get_field(value3, field3, or_else) {
     return or_else();
   }
 }
-function inspect(v) {
-  const t = typeof v;
-  if (v === true)
-    return "True";
-  if (v === false)
-    return "False";
-  if (v === null)
-    return "//js(null)";
-  if (v === void 0)
-    return "Nil";
-  if (t === "string")
-    return inspectString(v);
-  if (t === "bigint" || t === "number")
-    return v.toString();
-  if (Array.isArray(v))
-    return `#(${v.map(inspect).join(", ")})`;
-  if (v instanceof List)
-    return inspectList(v);
-  if (v instanceof UtfCodepoint)
-    return inspectUtfCodepoint(v);
-  if (v instanceof BitArray)
-    return inspectBitArray(v);
-  if (v instanceof CustomType)
-    return inspectCustomType(v);
-  if (v instanceof Dict)
-    return inspectDict(v);
-  if (v instanceof Set)
-    return `//js(Set(${[...v].map(inspect).join(", ")}))`;
-  if (v instanceof RegExp)
-    return `//js(${v})`;
-  if (v instanceof Date)
-    return `//js(Date("${v.toISOString()}"))`;
-  if (v instanceof Function) {
-    const args = [];
-    for (const i of Array(v.length).keys())
-      args.push(String.fromCharCode(i + 97));
-    return `//fn(${args.join(", ")}) { ... }`;
-  }
-  return inspectObject(v);
-}
-function inspectString(str) {
-  let new_str = '"';
-  for (let i = 0; i < str.length; i++) {
-    let char = str[i];
-    switch (char) {
-      case "\n":
-        new_str += "\\n";
-        break;
-      case "\r":
-        new_str += "\\r";
-        break;
-      case "	":
-        new_str += "\\t";
-        break;
-      case "\f":
-        new_str += "\\f";
-        break;
-      case "\\":
-        new_str += "\\\\";
-        break;
-      case '"':
-        new_str += '\\"';
-        break;
-      default:
-        if (char < " " || char > "~" && char < "\xA0") {
-          new_str += "\\u{" + char.charCodeAt(0).toString(16).toUpperCase().padStart(4, "0") + "}";
-        } else {
-          new_str += char;
-        }
-    }
-  }
-  new_str += '"';
-  return new_str;
-}
-function inspectDict(map6) {
-  let body = "dict.from_list([";
-  let first3 = true;
-  map6.forEach((value3, key) => {
-    if (!first3)
-      body = body + ", ";
-    body = body + "#(" + inspect(key) + ", " + inspect(value3) + ")";
-    first3 = false;
-  });
-  return body + "])";
-}
-function inspectObject(v) {
-  const name = Object.getPrototypeOf(v)?.constructor?.name || "Object";
-  const props = [];
-  for (const k of Object.keys(v)) {
-    props.push(`${inspect(k)}: ${inspect(v[k])}`);
-  }
-  const body = props.length ? " " + props.join(", ") + " " : "";
-  const head = name === "Object" ? "" : name + " ";
-  return `//js(${head}{${body}})`;
-}
-function inspectCustomType(record) {
-  const props = Object.keys(record).map((label) => {
-    const value3 = inspect(record[label]);
-    return isNaN(parseInt(label)) ? `${label}: ${value3}` : value3;
-  }).join(", ");
-  return props ? `${record.constructor.name}(${props})` : record.constructor.name;
-}
-function inspectList(list3) {
-  return `[${list3.toArray().map(inspect).join(", ")}]`;
-}
-function inspectBitArray(bits) {
-  return `<<${Array.from(bits.buffer).join(", ")}>>`;
-}
-function inspectUtfCodepoint(codepoint2) {
-  return `//utfcodepoint(${String.fromCodePoint(codepoint2.value)})`;
-}
 
 // build/dev/javascript/gleam_stdlib/gleam/dict.mjs
 function new$() {
@@ -1992,82 +1568,412 @@ function keys(dict2) {
   return do_keys(dict2);
 }
 
-// build/dev/javascript/gleam_stdlib/gleam/string.mjs
-function length3(string4) {
-  return string_length(string4);
+// build/dev/javascript/gleam_stdlib/gleam/pair.mjs
+function second(pair) {
+  let a2 = pair[1];
+  return a2;
 }
-function lowercase2(string4) {
-  return lowercase(string4);
-}
-function starts_with2(string4, prefix) {
-  return starts_with(string4, prefix);
-}
-function concat3(strings) {
-  let _pipe = strings;
-  let _pipe$1 = from_strings(_pipe);
-  return to_string3(_pipe$1);
-}
-function join2(strings, separator) {
-  return join(strings, separator);
-}
-function pop_grapheme2(string4) {
-  return pop_grapheme(string4);
-}
-function do_slice(string4, idx, len) {
-  let _pipe = string4;
-  let _pipe$1 = graphemes(_pipe);
-  let _pipe$2 = drop(_pipe$1, idx);
-  let _pipe$3 = take(_pipe$2, len);
-  return concat3(_pipe$3);
-}
-function slice(string4, idx, len) {
-  let $ = len < 0;
-  if ($) {
-    return "";
-  } else {
-    let $1 = idx < 0;
-    if ($1) {
-      let translated_idx = length3(string4) + idx;
-      let $2 = translated_idx < 0;
-      if ($2) {
-        return "";
-      } else {
-        return do_slice(string4, translated_idx, len);
-      }
+
+// build/dev/javascript/gleam_stdlib/gleam/list.mjs
+function count_length(loop$list, loop$count) {
+  while (true) {
+    let list3 = loop$list;
+    let count = loop$count;
+    if (list3.atLeastLength(1)) {
+      let list$1 = list3.tail;
+      loop$list = list$1;
+      loop$count = count + 1;
     } else {
-      return do_slice(string4, idx, len);
+      return count;
     }
   }
 }
-function drop_left(string4, num_graphemes) {
-  let $ = num_graphemes < 0;
-  if ($) {
-    return string4;
-  } else {
-    return slice(string4, num_graphemes, length3(string4) - num_graphemes);
+function length3(list3) {
+  return count_length(list3, 0);
+}
+function do_reverse(loop$remaining, loop$accumulator) {
+  while (true) {
+    let remaining = loop$remaining;
+    let accumulator = loop$accumulator;
+    if (remaining.hasLength(0)) {
+      return accumulator;
+    } else {
+      let item = remaining.head;
+      let rest$1 = remaining.tail;
+      loop$remaining = rest$1;
+      loop$accumulator = prepend(item, accumulator);
+    }
   }
 }
-function split4(x, substring) {
-  if (substring === "") {
-    return graphemes(x);
+function reverse(xs) {
+  return do_reverse(xs, toList([]));
+}
+function is_empty(list3) {
+  return isEqual(list3, toList([]));
+}
+function first(list3) {
+  if (list3.hasLength(0)) {
+    return new Error(void 0);
   } else {
-    let _pipe = x;
-    let _pipe$1 = from_string(_pipe);
-    let _pipe$2 = split3(_pipe$1, substring);
-    return map2(_pipe$2, to_string3);
+    let x = list3.head;
+    return new Ok(x);
   }
 }
-function inspect2(term) {
-  let _pipe = inspect(term);
-  return to_string3(_pipe);
+function do_filter(loop$list, loop$fun, loop$acc) {
+  while (true) {
+    let list3 = loop$list;
+    let fun = loop$fun;
+    let acc = loop$acc;
+    if (list3.hasLength(0)) {
+      return reverse(acc);
+    } else {
+      let x = list3.head;
+      let xs = list3.tail;
+      let new_acc = (() => {
+        let $ = fun(x);
+        if ($) {
+          return prepend(x, acc);
+        } else {
+          return acc;
+        }
+      })();
+      loop$list = xs;
+      loop$fun = fun;
+      loop$acc = new_acc;
+    }
+  }
 }
-
-// build/dev/javascript/gleam_stdlib/gleam/io.mjs
-function debug(term) {
-  let _pipe = term;
-  let _pipe$1 = inspect2(_pipe);
-  print_debug(_pipe$1);
-  return term;
+function filter(list3, predicate) {
+  return do_filter(list3, predicate, toList([]));
+}
+function do_map(loop$list, loop$fun, loop$acc) {
+  while (true) {
+    let list3 = loop$list;
+    let fun = loop$fun;
+    let acc = loop$acc;
+    if (list3.hasLength(0)) {
+      return reverse(acc);
+    } else {
+      let x = list3.head;
+      let xs = list3.tail;
+      loop$list = xs;
+      loop$fun = fun;
+      loop$acc = prepend(fun(x), acc);
+    }
+  }
+}
+function map3(list3, fun) {
+  return do_map(list3, fun, toList([]));
+}
+function do_try_map(loop$list, loop$fun, loop$acc) {
+  while (true) {
+    let list3 = loop$list;
+    let fun = loop$fun;
+    let acc = loop$acc;
+    if (list3.hasLength(0)) {
+      return new Ok(reverse(acc));
+    } else {
+      let x = list3.head;
+      let xs = list3.tail;
+      let $ = fun(x);
+      if ($.isOk()) {
+        let y = $[0];
+        loop$list = xs;
+        loop$fun = fun;
+        loop$acc = prepend(y, acc);
+      } else {
+        let error2 = $[0];
+        return new Error(error2);
+      }
+    }
+  }
+}
+function try_map(list3, fun) {
+  return do_try_map(list3, fun, toList([]));
+}
+function drop(loop$list, loop$n) {
+  while (true) {
+    let list3 = loop$list;
+    let n = loop$n;
+    let $ = n <= 0;
+    if ($) {
+      return list3;
+    } else {
+      if (list3.hasLength(0)) {
+        return toList([]);
+      } else {
+        let xs = list3.tail;
+        loop$list = xs;
+        loop$n = n - 1;
+      }
+    }
+  }
+}
+function do_take(loop$list, loop$n, loop$acc) {
+  while (true) {
+    let list3 = loop$list;
+    let n = loop$n;
+    let acc = loop$acc;
+    let $ = n <= 0;
+    if ($) {
+      return reverse(acc);
+    } else {
+      if (list3.hasLength(0)) {
+        return reverse(acc);
+      } else {
+        let x = list3.head;
+        let xs = list3.tail;
+        loop$list = xs;
+        loop$n = n - 1;
+        loop$acc = prepend(x, acc);
+      }
+    }
+  }
+}
+function take2(list3, n) {
+  return do_take(list3, n, toList([]));
+}
+function do_append(loop$first, loop$second) {
+  while (true) {
+    let first3 = loop$first;
+    let second2 = loop$second;
+    if (first3.hasLength(0)) {
+      return second2;
+    } else {
+      let item = first3.head;
+      let rest$1 = first3.tail;
+      loop$first = rest$1;
+      loop$second = prepend(item, second2);
+    }
+  }
+}
+function append4(first3, second2) {
+  return do_append(reverse(first3), second2);
+}
+function reverse_and_prepend(loop$prefix, loop$suffix) {
+  while (true) {
+    let prefix = loop$prefix;
+    let suffix = loop$suffix;
+    if (prefix.hasLength(0)) {
+      return suffix;
+    } else {
+      let first$1 = prefix.head;
+      let rest$1 = prefix.tail;
+      loop$prefix = rest$1;
+      loop$suffix = prepend(first$1, suffix);
+    }
+  }
+}
+function do_concat(loop$lists, loop$acc) {
+  while (true) {
+    let lists = loop$lists;
+    let acc = loop$acc;
+    if (lists.hasLength(0)) {
+      return reverse(acc);
+    } else {
+      let list3 = lists.head;
+      let further_lists = lists.tail;
+      loop$lists = further_lists;
+      loop$acc = reverse_and_prepend(list3, acc);
+    }
+  }
+}
+function concat3(lists) {
+  return do_concat(lists, toList([]));
+}
+function flatten(lists) {
+  return do_concat(lists, toList([]));
+}
+function flat_map(list3, fun) {
+  let _pipe = map3(list3, fun);
+  return concat3(_pipe);
+}
+function fold(loop$list, loop$initial, loop$fun) {
+  while (true) {
+    let list3 = loop$list;
+    let initial = loop$initial;
+    let fun = loop$fun;
+    if (list3.hasLength(0)) {
+      return initial;
+    } else {
+      let x = list3.head;
+      let rest$1 = list3.tail;
+      loop$list = rest$1;
+      loop$initial = fun(initial, x);
+      loop$fun = fun;
+    }
+  }
+}
+function fold_right(list3, initial, fun) {
+  if (list3.hasLength(0)) {
+    return initial;
+  } else {
+    let x = list3.head;
+    let rest$1 = list3.tail;
+    return fun(fold_right(rest$1, initial, fun), x);
+  }
+}
+function do_index_fold(loop$over, loop$acc, loop$with, loop$index) {
+  while (true) {
+    let over = loop$over;
+    let acc = loop$acc;
+    let with$ = loop$with;
+    let index5 = loop$index;
+    if (over.hasLength(0)) {
+      return acc;
+    } else {
+      let first$1 = over.head;
+      let rest$1 = over.tail;
+      loop$over = rest$1;
+      loop$acc = with$(acc, first$1, index5);
+      loop$with = with$;
+      loop$index = index5 + 1;
+    }
+  }
+}
+function index_fold(over, initial, fun) {
+  return do_index_fold(over, initial, fun, 0);
+}
+function find_map(loop$haystack, loop$fun) {
+  while (true) {
+    let haystack = loop$haystack;
+    let fun = loop$fun;
+    if (haystack.hasLength(0)) {
+      return new Error(void 0);
+    } else {
+      let x = haystack.head;
+      let rest$1 = haystack.tail;
+      let $ = fun(x);
+      if ($.isOk()) {
+        let x$1 = $[0];
+        return new Ok(x$1);
+      } else {
+        loop$haystack = rest$1;
+        loop$fun = fun;
+      }
+    }
+  }
+}
+function do_intersperse(loop$list, loop$separator, loop$acc) {
+  while (true) {
+    let list3 = loop$list;
+    let separator = loop$separator;
+    let acc = loop$acc;
+    if (list3.hasLength(0)) {
+      return reverse(acc);
+    } else {
+      let x = list3.head;
+      let rest$1 = list3.tail;
+      loop$list = rest$1;
+      loop$separator = separator;
+      loop$acc = prepend(x, prepend(separator, acc));
+    }
+  }
+}
+function intersperse(list3, elem) {
+  if (list3.hasLength(0)) {
+    return list3;
+  } else if (list3.hasLength(1)) {
+    return list3;
+  } else {
+    let x = list3.head;
+    let rest$1 = list3.tail;
+    return do_intersperse(rest$1, elem, toList([x]));
+  }
+}
+function do_repeat(loop$a, loop$times, loop$acc) {
+  while (true) {
+    let a2 = loop$a;
+    let times = loop$times;
+    let acc = loop$acc;
+    let $ = times <= 0;
+    if ($) {
+      return acc;
+    } else {
+      loop$a = a2;
+      loop$times = times - 1;
+      loop$acc = prepend(a2, acc);
+    }
+  }
+}
+function repeat3(a2, times) {
+  return do_repeat(a2, times, toList([]));
+}
+function do_split(loop$list, loop$n, loop$taken) {
+  while (true) {
+    let list3 = loop$list;
+    let n = loop$n;
+    let taken = loop$taken;
+    let $ = n <= 0;
+    if ($) {
+      return [reverse(taken), list3];
+    } else {
+      if (list3.hasLength(0)) {
+        return [reverse(taken), toList([])];
+      } else {
+        let x = list3.head;
+        let xs = list3.tail;
+        loop$list = xs;
+        loop$n = n - 1;
+        loop$taken = prepend(x, taken);
+      }
+    }
+  }
+}
+function split4(list3, index5) {
+  return do_split(list3, index5, toList([]));
+}
+function do_split_while(loop$list, loop$f, loop$acc) {
+  while (true) {
+    let list3 = loop$list;
+    let f = loop$f;
+    let acc = loop$acc;
+    if (list3.hasLength(0)) {
+      return [reverse(acc), toList([])];
+    } else {
+      let x = list3.head;
+      let xs = list3.tail;
+      let $ = f(x);
+      if (!$) {
+        return [reverse(acc), list3];
+      } else {
+        loop$list = xs;
+        loop$f = f;
+        loop$acc = prepend(x, acc);
+      }
+    }
+  }
+}
+function split_while(list3, predicate) {
+  return do_split_while(list3, predicate, toList([]));
+}
+function key_find(keyword_list, desired_key) {
+  return find_map(
+    keyword_list,
+    (keyword) => {
+      let key = keyword[0];
+      let value3 = keyword[1];
+      let $ = isEqual(key, desired_key);
+      if ($) {
+        return new Ok(value3);
+      } else {
+        return new Error(void 0);
+      }
+    }
+  );
+}
+function key_set(list3, key, value3) {
+  if (list3.hasLength(0)) {
+    return toList([[key, value3]]);
+  } else if (list3.atLeastLength(1) && isEqual(list3.head[0], key)) {
+    let k = list3.head[0];
+    let rest$1 = list3.tail;
+    return prepend([key, value3], rest$1);
+  } else {
+    let first$1 = list3.head;
+    let rest$1 = list3.tail;
+    return prepend(first$1, key_set(rest$1, key, value3));
+  }
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/bool.mjs
@@ -2999,7 +2905,7 @@ function on_keydown(msg) {
     (event2) => {
       let _pipe = event2;
       let _pipe$1 = field("key", string)(_pipe);
-      return map3(_pipe$1, msg);
+      return map2(_pipe$1, msg);
     }
   );
 }
@@ -3014,7 +2920,7 @@ function on_input(msg) {
     "input",
     (event2) => {
       let _pipe = value2(event2);
-      return map3(_pipe, msg);
+      return map2(_pipe, msg);
     }
   );
 }
@@ -3070,7 +2976,7 @@ function push_path2(errors, key) {
     toList([
       string,
       (x) => {
-        return map3(int(x), to_string2);
+        return map2(int(x), to_string2);
       }
     ])
   );
@@ -3083,7 +2989,7 @@ function push_path2(errors, key) {
       return "<" + classify(key$1) + ">";
     }
   })();
-  return map2(
+  return map3(
     errors,
     (error2) => {
       return error2.withFields({ path: prepend(key$2, error2.path) });
@@ -3137,7 +3043,7 @@ function subfield(decoder, field_path, field_decoder) {
       } else if (!constructor.isOk() && !data$1.isOk()) {
         let e1 = constructor[0];
         let e2 = data$1[0];
-        return new Error(append2(e1, e2));
+        return new Error(append4(e1, e2));
       } else if (!data$1.isOk()) {
         let errors = data$1[0];
         return new Error(errors);
@@ -3169,14 +3075,14 @@ function regex_submatches(pattern, string4) {
   let _pipe = pattern;
   let _pipe$1 = compile(_pipe, new Options(true, false));
   let _pipe$2 = nil_error(_pipe$1);
-  let _pipe$3 = map3(
+  let _pipe$3 = map2(
     _pipe$2,
     (_capture) => {
       return scan(_capture, string4);
     }
   );
   let _pipe$4 = try$(_pipe$3, first);
-  let _pipe$5 = map3(_pipe$4, (m) => {
+  let _pipe$5 = map2(_pipe$4, (m) => {
     return m.submatches;
   });
   return unwrap2(_pipe$5, toList([]));
@@ -3221,9 +3127,9 @@ function extra_required(loop$list, loop$remaining) {
 }
 function pad_list(list3, size) {
   let _pipe = list3;
-  return append2(
+  return append4(
     _pipe,
-    repeat2(new None(), extra_required(list3, size))
+    repeat3(new None(), extra_required(list3, size))
   );
 }
 function split_authority(authority) {
@@ -3298,7 +3204,7 @@ function do_parse(uri_string) {
     let _pipe = fragment;
     let _pipe$1 = to_result(_pipe, void 0);
     let _pipe$2 = try$(_pipe$1, pop_grapheme2);
-    let _pipe$3 = map3(_pipe$2, second);
+    let _pipe$3 = map2(_pipe$2, second);
     return from_result(_pipe$3);
   })();
   let scheme$2 = (() => {
@@ -3385,7 +3291,7 @@ function to_string6(uri) {
       return parts$4;
     }
   })();
-  return concat3(parts$5);
+  return concat2(parts$5);
 }
 
 // build/dev/javascript/gleam_http/gleam/http.mjs
@@ -4100,8 +4006,100 @@ var scrollToBottom = (divId) => {
     behavior: "smooth"
   });
 };
-function openPDFInNewTab() {
+function openPDFInNewTab(link) {
   window.open("https://drive.google.com/file/d/1HJDEvwinORrVlJk80oL7NdPjmKcAhzO9/view", "_blank");
+}
+
+// build/dev/javascript/app/output/text_styling.mjs
+function is_link(str) {
+  return contains_string(str, "http");
+}
+function is_inline_code(str) {
+  return contains_string(str, "`");
+}
+function split_on_predicate(ls, predicate) {
+  return split_while(
+    ls,
+    (x) => {
+      let _pipe = predicate(x);
+      return negate(_pipe);
+    }
+  );
+}
+function style_helper(loop$input, loop$output, loop$predictate, loop$default, loop$style_desc) {
+  while (true) {
+    let input2 = loop$input;
+    let output = loop$output;
+    let predictate = loop$predictate;
+    let default$ = loop$default;
+    let style_desc = loop$style_desc;
+    if (input2[1].hasLength(0)) {
+      let t = input2[0];
+      return append4(
+        output,
+        toList([default$.withFields({ text: join2(t, " ") })])
+      );
+    } else if (input2[0].hasLength(0)) {
+      let l = input2[1];
+      if (l.hasLength(0)) {
+        return output;
+      } else {
+        let x = l.head;
+        let xs = l.tail;
+        let styled = style_desc.withFields({ text: x });
+        loop$input = split_on_predicate(xs, predictate);
+        loop$output = append4(output, toList([styled]));
+        loop$predictate = predictate;
+        loop$default = default$;
+        loop$style_desc = style_desc;
+      }
+    } else {
+      let x = input2[0];
+      let xs = input2[1];
+      loop$input = split_on_predicate(xs, predictate);
+      loop$output = append4(
+        output,
+        toList([default$.withFields({ text: join2(x, " ") })])
+      );
+      loop$predictate = predictate;
+      loop$default = default$;
+      loop$style_desc = style_desc;
+    }
+  }
+}
+function style_text(text2, predictate, style_desc) {
+  let words = split3(text2.text, " ");
+  let input2 = split_on_predicate(words, predictate);
+  return style_helper(input2, toList([]), predictate, text2, style_desc);
+}
+function extract_link_params(str) {
+  let options = new Options(false, true);
+  let $ = compile("\\((.+)\\).\\[(.+)\\]", options);
+  if (!$.isOk()) {
+    throw makeError(
+      "let_assert",
+      "output/text_styling",
+      52,
+      "extract_link_params",
+      "Pattern match failed, no pattern matched the value.",
+      { value: $ }
+    );
+  }
+  let re = $[0];
+  let $1 = scan(re, str);
+  if ($1.hasLength(0)) {
+    return new None();
+  } else {
+    let x = $1.head;
+    let $2 = values(x.submatches);
+    if ($2.hasLength(2)) {
+      let x$1 = $2.head;
+      let y = $2.tail.head;
+      return new Some([replace(x$1, "%20", " "), y]);
+    } else {
+      return new None();
+    }
+  }
 }
 
 // build/dev/javascript/app/output/text_rendering.mjs
@@ -4116,7 +4114,7 @@ function after2(timeout, msg) {
 }
 function pretty_print(char, str, model) {
   scrollToBottom("App-App-App");
-  let $ = split(model.output, length2(model.output) - 1);
+  let $ = split4(model.output, length3(model.output) - 1);
   let history = $[0];
   let recent = $[1];
   if (!recent.hasLength(1)) {
@@ -4133,7 +4131,7 @@ function pretty_print(char, str, model) {
   if (str === "") {
     return [
       model.withFields({
-        output: append2(
+        output: append4(
           history,
           toList([new Text2(output.text + char, output.style, output.html)])
         )
@@ -4145,7 +4143,7 @@ function pretty_print(char, str, model) {
     if (split6.isOk()) {
       let val = split6[0];
       let model$1 = model.withFields({
-        output: append2(
+        output: append4(
           history,
           toList([new Text2(output.text + char, output.style, output.html)])
         )
@@ -4155,7 +4153,7 @@ function pretty_print(char, str, model) {
     } else {
       return [
         model.withFields({
-          output: append2(
+          output: append4(
             history,
             toList([
               new Text2(output.text + char, output.style, output.html)
@@ -4169,67 +4167,39 @@ function pretty_print(char, str, model) {
 }
 function init_pretty_print(char, line, model) {
   let new_model = model.withFields({
-    output: append2(
+    output: append4(
       model.output,
       toList([new Text2("", line.style, line.html)])
     )
   });
   return pretty_print(char, line.text, new_model);
 }
-function not_link(str) {
-  return negate(contains_string(str, "http"));
-}
-function split_on_link(words) {
-  return split_while(words, not_link);
-}
-function process_text(loop$text, loop$output) {
-  while (true) {
-    let text2 = loop$text;
-    let output = loop$output;
-    if (text2[1].hasLength(0)) {
-      let t = text2[0];
-      return append2(
-        output,
-        toList([new Text2(join2(t, " "), "", new Span())])
-      );
-    } else if (text2[0].hasLength(0)) {
-      let l = text2[1];
-      if (l.hasLength(0)) {
-        return output;
-      } else {
-        let x = l.head;
-        let xs = l.tail;
-        let link = new Text2(
-          x,
-          "underline text-purple-400 hover:text-purple-300",
-          new Link()
-        );
-        loop$text = split_on_link(xs);
-        loop$output = append2(output, toList([link]));
-      }
-    } else {
-      let x = text2[0];
-      let xs = text2[1];
-      loop$text = split_on_link(xs);
-      loop$output = append2(
-        output,
-        toList([new Text2(join2(x, " "), "", new Span())])
+function process_text(text2) {
+  let txt = new Text2(text2, "", new Span());
+  let _pipe = style_text(
+    txt,
+    is_link,
+    new Text2(
+      "",
+      "underline text-purple-400 hover:text-purple-300",
+      new Link()
+    )
+  );
+  let _pipe$1 = flat_map(
+    _pipe,
+    (_capture) => {
+      return style_text(
+        _capture,
+        is_inline_code,
+        new Text2("", "text-neutral-900 bg-purple-500", new Span())
       );
     }
-  }
+  );
+  return intersperse(_pipe$1, new Text2(" ", "", new Span()));
 }
 function read_json(json) {
-  let desc = (() => {
-    let _pipe = process_text(
-      (() => {
-        let _pipe2 = split4(json.desc, " ");
-        return split_on_link(_pipe2);
-      })(),
-      toList([])
-    );
-    return intersperse(_pipe, new Text2(" ", "", new Span()));
-  })();
-  return append2(
+  let desc = process_text(json.desc);
+  return append4(
     toList([
       new Text2(
         json.title + "\n\n",
@@ -4277,15 +4247,15 @@ function init_text_rendering(data, model) {
     } else {
       let $1 = model.flag.flag;
       if ($1 === "--all") {
-        let $2 = map2(data.records, read_json);
+        let $2 = map3(data.records, read_json);
         if ($2.atLeastLength(1)) {
           let first3 = $2.head;
           let last = $2.tail;
           let updated_last = (() => {
-            let _pipe = map2(
+            let _pipe = map3(
               last,
               (ls) => {
-                return append2(
+                return append4(
                   toList([new Text2("\n\n", "", new Span())]),
                   ls
                 );
@@ -4294,12 +4264,12 @@ function init_text_rendering(data, model) {
             return flatten(_pipe);
           })();
           return new_model.withFields({
-            output_q: append2(first3, updated_last)
+            output_q: append4(first3, updated_last)
           });
         } else {
           return new_model.withFields({
             output_q: (() => {
-              let _pipe = map2(data.records, read_json);
+              let _pipe = map3(data.records, read_json);
               return flatten(_pipe);
             })()
           });
@@ -4509,7 +4479,7 @@ function execute_command_with_flag(new_model, input2, flag) {
   }
 }
 function gen_help(command, max2) {
-  let buffer = concat3(repeat2(" ", max2 + 2 - length3(command.command)));
+  let buffer = concat2(repeat3(" ", max2 + 2 - length2(command.command)));
   return toList([
     new Text2(
       "[",
@@ -4532,10 +4502,10 @@ function gen_help(command, max2) {
 function parse_help(model) {
   let new_model = model.withFields({ flag: new Flag("", "", "") });
   let max2 = (() => {
-    let lengths = map2(
+    let lengths = map3(
       model.valid_commands.commands,
       (c) => {
-        return length3(c.command);
+        return length2(c.command);
       }
     );
     return fold(lengths, 0, max);
@@ -4545,7 +4515,7 @@ function parse_help(model) {
       let $ = filter(
         model.valid_commands.commands,
         (command) => {
-          return length2(command.flags) >= 2;
+          return length3(command.flags) >= 2;
         }
       );
       if ($.atLeastLength(1)) {
@@ -4556,7 +4526,7 @@ function parse_help(model) {
       }
     })();
     let help = (() => {
-      let _pipe = map2(
+      let _pipe = map3(
         model.valid_commands.commands,
         (_capture) => {
           return gen_help(_capture, max2);
@@ -4583,7 +4553,7 @@ function parse_help(model) {
       new Text2("help ", "", new Span()),
       new Text2("--" + example, "text-purple-300", new Span())
     ]);
-    return append2(help, appendix);
+    return append4(help, appendix);
   })();
   return new_model.withFields({ output_q: basic_help });
 }
@@ -4597,20 +4567,20 @@ function gen_command_help(command) {
     ]);
   } else {
     let max2 = (() => {
-      let lengths = map2(
+      let lengths = map3(
         command.flags,
         (flag) => {
-          return length3(flag.flag);
+          return length2(flag.flag);
         }
       );
       return fold(lengths, 0, max);
     })();
     let flags = (() => {
-      let _pipe = map2(
+      let _pipe = map3(
         command.flags,
         (flag) => {
-          let buffer = concat3(
-            repeat2(" ", max2 + 2 - length3(flag.flag))
+          let buffer = concat2(
+            repeat3(" ", max2 + 2 - length2(flag.flag))
           );
           return toList([
             new Text2(
@@ -4627,11 +4597,11 @@ function gen_command_help(command) {
         toList([new Text2("\n", "", new Span())])
       );
       let _pipe$2 = flatten(_pipe$1);
-      return append2(
+      return append4(
         _pipe$2,
         toList([
           new Text2(
-            "\n--all" + concat3(repeat2(" ", max2 + 2 - 5)),
+            "\n--all" + concat2(repeat3(" ", max2 + 2 - 5)),
             "text-purple-300",
             new Span()
           ),
@@ -4657,7 +4627,7 @@ function gen_command_help(command) {
         new Span()
       )
     ]);
-    return append2(help, flags);
+    return append4(help, flags);
   }
 }
 function render_command_help(new_model, flag) {
@@ -4742,9 +4712,9 @@ function parse_input(model) {
   let runner = create_runner(model.input);
   let new_model = model.withFields({
     input: "",
-    output: append2(model.output, runner)
+    output: append4(model.output, runner)
   });
-  let args = split4(model.input, " ");
+  let args = split3(model.input, " ");
   let $ = model.state;
   if ($ instanceof GO) {
     return parse_args(args, new_model);
@@ -4756,7 +4726,7 @@ function parse_keypress(key, model) {
   if (key === "Enter") {
     let inc = model.pos + 1;
     let new_model = model.withFields({
-      command_history: append2(
+      command_history: append4(
         model.command_history,
         toList([[inc, model.input]])
       ),
@@ -4812,7 +4782,6 @@ function init3(_) {
   return [init2(), from(get_commands)];
 }
 function update(model, msg) {
-  debug(model.output);
   if (msg instanceof FetchedCommands) {
     let data = msg.data;
     return render_text(startup(data));
@@ -4946,7 +4915,7 @@ function view(model) {
                   class$("whitespace-pre-wrap font-mono text-purple-500"),
                   id("output")
                 ]),
-                map2(
+                map3(
                   model.output,
                   (line) => {
                     let $ = line.html;
@@ -4956,15 +4925,30 @@ function view(model) {
                         toList([text(line.text)])
                       );
                     } else {
-                      return a(
-                        toList([href(line.text)]),
-                        toList([
-                          span(
-                            toList([class$(line.style)]),
-                            toList([text(line.text)])
-                          )
-                        ])
-                      );
+                      let $1 = extract_link_params(line.text);
+                      if ($1 instanceof Some) {
+                        let x = $1[0][0];
+                        let y = $1[0][1];
+                        return a(
+                          toList([href(y)]),
+                          toList([
+                            span(
+                              toList([class$(line.style)]),
+                              toList([text(x)])
+                            )
+                          ])
+                        );
+                      } else {
+                        return a(
+                          toList([href(line.text)]),
+                          toList([
+                            span(
+                              toList([class$(line.style)]),
+                              toList([text(line.text)])
+                            )
+                          ])
+                        );
+                      }
                     }
                   }
                 )
@@ -5050,7 +5034,7 @@ function main() {
     throw makeError(
       "let_assert",
       "app",
-      24,
+      25,
       "main",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }

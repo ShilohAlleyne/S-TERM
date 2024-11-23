@@ -1,6 +1,5 @@
 import gleam/list as l
 import gleam/string as s
-import gleam/bool as b
 
 import lustre/effect
 
@@ -8,7 +7,8 @@ import types/text
 import types/model.{type Model}
 import types/model as mdl
 import types/data
-import types/msg.{type Msg} 
+import types/msg.{type Msg}
+import output/text_styling as ts
 
 @external(javascript, "../app.ffi.mjs", "after")
 fn do_after(timeout: Int, callback: fn() -> Nil) -> Nil
@@ -52,37 +52,19 @@ pub fn pretty_print(char: String, str: String, model: Model) -> #(Model, effect.
     }
 }
 
-fn not_link(str: String) -> Bool {
-    b.negate(s.contains(str, "http"))
-}
-
-fn split_on_link(words: List(String)) -> #(List(String), List(String)) {
-    l.split_while(words, not_link)
-}
-
-// Auto format detected links
-fn process_text(text: #(List(String), List(String)), output: List(text.Text)) -> List(text.Text) {
-    case text {
-        #(t, []) -> l.append(output, [text.Text(s.join(t, " "), "", text.Span)])
-        #([], l) -> {
-            // Pop the first elem, which will be a link - recur on the rest
-            case l {
-                [] -> output 
-                [x, ..xs] -> {
-                    let link = text.Text(x, "underline text-purple-400 hover:text-purple-300", text.Link)
-                    process_text(split_on_link(xs), l.append(output, [link]))
-                }
-            }
-        }
-        #(x, xs) -> process_text(split_on_link(xs), l.append(output, [text.Text(s.join(x, " "), "", text.Span)]))
-    }
+// Auto format
+fn process_text(text: String) -> List(text.Text) {
+    let txt = text.Text(text, "", text.Span)
+    ts.style_text(txt, ts.is_link, text.Text("", "underline text-purple-400 hover:text-purple-300", text.Link))
+        |> l.flat_map(ts.style_text(_, ts.is_inline_code, text.Text("", "text-neutral-900 bg-purple-500", text.Span)))
+        |> l.intersperse(text.Text(" ", "", text.Span))
 }
 
 
 // Takes some json and outputs a line to print
 fn read_json(json: data.Record) -> List(text.Text) {
-    let desc = process_text(s.split(json.desc, " ") |> split_on_link, []) |> l.intersperse(text.Text(" ", "", text.Span)) 
-    l.append([text.Text(text: json.title <> "\n\n", style: "underline text-purple-400", html: text.Span)], desc) 
+    let desc = process_text(json.desc)
+    l.append([text.Text(text: json.title <> "\n\n", style: "underline text-purple-400", html: text.Span)], desc)
 }
 
 // Finds a proficiency in a list of records

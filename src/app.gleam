@@ -1,6 +1,6 @@
-import gleam/io
 import gleam/string as s
 import gleam/list as l
+import gleam/option as opt
 
 import lustre
 import lustre/effect
@@ -12,8 +12,9 @@ import lustre/attribute.{class, id,autofocus}
 
 import api/api
 import output/text_rendering as rend
-import output/command_parsing as cmd 
+import output/command_parsing as cmd
 import output/pdf_download as pdf
+import output/text_styling as ts
 import types/text
 import types/model.{type Model}
 import types/model as mdl
@@ -30,7 +31,6 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
 }
 
 fn update(model: Model, msg: Msg) -> #(Model, effect.Effect(Msg)) {
-    io.debug(model.output)
     case msg {
         // Init
         msg.FetchedCommands(data) -> rend.render_text(mdl.startup(data))
@@ -121,7 +121,11 @@ fn view(model: Model) {
                                     fn (line: text.Text) -> Element(Msg) {
                                         case line.html {
                                             text.Span -> h.span([class(line.style)], [text(line.text)])
-                                            text.Link -> h.a([a.href(line.text)], [h.span([class(line.style)], [text(line.text)])])
+                                            text.Link -> case ts.extract_link_params(line.text) {
+                                                // Inline links
+                                                opt.Some(#(x, y)) -> h.a([a.href(y)], [h.span([class(line.style)], [text(x)])])
+                                                opt.None          -> h.a([a.href(line.text)], [h.span([class(line.style)], [text(line.text)])])
+                                            }
                                         }
                                     }
                                 )

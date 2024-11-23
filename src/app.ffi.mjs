@@ -32,6 +32,6 @@ export function downloadPDF() {
 }
 
 // PDF In a new tab
-export function openPDFInNewTab() {
+export function openPDFInNewTab(link) {
     window.open("https://drive.google.com/file/d/1HJDEvwinORrVlJk80oL7NdPjmKcAhzO9/view", "_blank");
 }
