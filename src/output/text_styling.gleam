@@ -50,6 +50,7 @@ pub fn extract_link_params(str: String) -> opt.Option(#(String, String)) {
     // regex
     let options = re.Options(case_insensitive: False, multi_line: True)
     let assert Ok(re) = re.compile("\\((.+)\\).\\[(.+)\\]", with: options)
+    // let assert Ok(re) = re.compile("\\((.+)\\).[([^]]+)", with: options)
     case re.scan(re, str) {
         [] -> opt.None
         [x, .._] -> {
@@ -59,4 +60,9 @@ pub fn extract_link_params(str: String) -> opt.Option(#(String, String)) {
             }
         }
     }
+}
+
+// Buffer fn for sanity
+pub fn buffer(str: String, buffer: String, no: Int) -> String {
+    s.repeat(buffer, no) <> str
 }

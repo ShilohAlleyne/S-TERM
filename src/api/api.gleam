@@ -152,10 +152,10 @@ pub fn get_commands(dispatch) {
 
                 case data_decoder {
                     Ok(data) -> dispatch(msg.FetchedCommands(data))
-                    Error(_) -> dispatch(msg.FetchFailed)
+                    Error(_) -> dispatch(msg.FetchedCommandsFailed)
                 }
             }
-            _   -> dispatch(msg.FetchFailed)
+            _   -> dispatch(msg.FetchedCommandsFailed)
         }
         // Resolve the promise
         promise.resolve(Ok(Nil))

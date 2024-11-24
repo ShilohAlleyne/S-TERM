@@ -1,9 +1,12 @@
 import types/data
 import types/text
+import output/text_styling as ts
 
 pub type Model {
     Model(
         state: State,
+        status: List(text.Text),
+        status_q: List(text.Text),
         valid_commands: data.CommandData,
         input: String,
         output: List(text.Text),
@@ -25,6 +28,8 @@ pub type State {
 pub fn init() -> Model {
     Model(
         state: Loading,
+        status: [],
+        status_q: [],
         valid_commands: data.new_command_data(),
         input: "",
         output: [],
@@ -39,14 +44,16 @@ pub fn init() -> Model {
 // Loads the valid commands for the model
 pub fn startup(data: data.CommandData) -> Model {
     let text = [
-        text.Text("[", "text-green-300", text.Span),
+        text.Text(ts.buffer(" ", " ", 10), "", text.Span),
+        text.Text(ts.buffer("[", "-", 52), "text-green-300", text.Span),
         text.Text("[", "text-green-400", text.Span),
         text.Text("ALL SYSTEMS GO", "text-green-500", text.Span),
         text.Text("]", "text-green-400", text.Span),
-        text.Text("]", "text-green-300", text.Span)
+        text.Text("]", "text-green-300", text.Span),
+        text.Text(ts.buffer("-", "-", 52), "text-green-300", text.Span),
 
     ]
-    Model(..init(), state: GO, valid_commands: data, output_q: text)
+    Model(..init(), state: GO, valid_commands: data, status_q: text)
 }
 
 pub fn error(error: String, model: Model) -> Model {

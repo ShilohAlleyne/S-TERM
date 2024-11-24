@@ -630,6 +630,14 @@ video {
   flex: none;
 }
 
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
 .overflow-y-auto {
   overflow-y: auto;
 }
@@ -765,11 +773,6 @@ video {
 
 .underline {
   text-decoration-line: underline;
-}
-
-.drop-shadow-glow {
-  --tw-drop-shadow: drop-shadow(0 0px 20px rgba(255, 255, 255, 0.35)) drop-shadow(0 0px 65px rgba(255, 255, 255, 0.2));
-  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
 
 .filter {

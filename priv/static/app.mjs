@@ -78,11 +78,11 @@ var NonEmpty = class extends List {
   }
 };
 var BitArray = class _BitArray {
-  constructor(buffer) {
-    if (!(buffer instanceof Uint8Array)) {
+  constructor(buffer2) {
+    if (!(buffer2 instanceof Uint8Array)) {
       throw "BitArray can only be constructed from a Uint8Array";
     }
-    this.buffer = buffer;
+    this.buffer = buffer2;
   }
   // @internal
   get length() {
@@ -397,6 +397,111 @@ function nil_error(result) {
   });
 }
 
+// build/dev/javascript/gleam_stdlib/gleam/iterator.mjs
+var Stop = class extends CustomType {
+};
+var Continue2 = class extends CustomType {
+  constructor(x0, x1) {
+    super();
+    this[0] = x0;
+    this[1] = x1;
+  }
+};
+var Iterator = class extends CustomType {
+  constructor(continuation) {
+    super();
+    this.continuation = continuation;
+  }
+};
+var Next = class extends CustomType {
+  constructor(element2, accumulator) {
+    super();
+    this.element = element2;
+    this.accumulator = accumulator;
+  }
+};
+function do_unfold(initial, f) {
+  return () => {
+    let $ = f(initial);
+    if ($ instanceof Next) {
+      let x = $.element;
+      let acc = $.accumulator;
+      return new Continue2(x, do_unfold(acc, f));
+    } else {
+      return new Stop();
+    }
+  };
+}
+function unfold(initial, f) {
+  let _pipe = initial;
+  let _pipe$1 = do_unfold(_pipe, f);
+  return new Iterator(_pipe$1);
+}
+function repeatedly(f) {
+  return unfold(void 0, (_) => {
+    return new Next(f(), void 0);
+  });
+}
+function repeat(x) {
+  return repeatedly(() => {
+    return x;
+  });
+}
+function do_fold(loop$continuation, loop$f, loop$accumulator) {
+  while (true) {
+    let continuation = loop$continuation;
+    let f = loop$f;
+    let accumulator = loop$accumulator;
+    let $ = continuation();
+    if ($ instanceof Continue2) {
+      let elem = $[0];
+      let next = $[1];
+      loop$continuation = next;
+      loop$f = f;
+      loop$accumulator = f(accumulator, elem);
+    } else {
+      return accumulator;
+    }
+  }
+}
+function fold(iterator, initial, f) {
+  let _pipe = iterator.continuation;
+  return do_fold(_pipe, f, initial);
+}
+function to_list(iterator) {
+  let _pipe = iterator;
+  let _pipe$1 = fold(
+    _pipe,
+    toList([]),
+    (acc, e) => {
+      return prepend(e, acc);
+    }
+  );
+  return reverse(_pipe$1);
+}
+function do_take(continuation, desired) {
+  return () => {
+    let $ = desired > 0;
+    if (!$) {
+      return new Stop();
+    } else {
+      let $1 = continuation();
+      if ($1 instanceof Stop) {
+        return new Stop();
+      } else {
+        let e = $1[0];
+        let next = $1[1];
+        return new Continue2(e, do_take(next, desired - 1));
+      }
+    }
+  };
+}
+function take(iterator, desired) {
+  let _pipe = iterator.continuation;
+  let _pipe$1 = do_take(_pipe, desired);
+  return new Iterator(_pipe$1);
+}
+
 // build/dev/javascript/gleam_stdlib/gleam/string_builder.mjs
 function from_strings(strings) {
   return concat(strings);
@@ -431,6 +536,12 @@ function concat2(strings) {
   let _pipe = strings;
   let _pipe$1 = from_strings(_pipe);
   return to_string3(_pipe$1);
+}
+function repeat2(string4, times) {
+  let _pipe = repeat(string4);
+  let _pipe$1 = take(_pipe, times);
+  let _pipe$2 = to_list(_pipe$1);
+  return concat2(_pipe$2);
 }
 function join2(strings, separator) {
   return join(strings, separator);
@@ -1709,7 +1820,7 @@ function drop(loop$list, loop$n) {
     }
   }
 }
-function do_take(loop$list, loop$n, loop$acc) {
+function do_take2(loop$list, loop$n, loop$acc) {
   while (true) {
     let list3 = loop$list;
     let n = loop$n;
@@ -1731,7 +1842,7 @@ function do_take(loop$list, loop$n, loop$acc) {
   }
 }
 function take2(list3, n) {
-  return do_take(list3, n, toList([]));
+  return do_take2(list3, n, toList([]));
 }
 function do_append(loop$first, loop$second) {
   while (true) {
@@ -1788,7 +1899,7 @@ function flat_map(list3, fun) {
   let _pipe = map3(list3, fun);
   return concat3(_pipe);
 }
-function fold(loop$list, loop$initial, loop$fun) {
+function fold2(loop$list, loop$initial, loop$fun) {
   while (true) {
     let list3 = loop$list;
     let initial = loop$initial;
@@ -2092,7 +2203,7 @@ function do_handlers(loop$element, loop$handlers, loop$key) {
     } else if (element2 instanceof Element) {
       let attrs = element2.attrs;
       let children2 = element2.children;
-      let handlers$1 = fold(
+      let handlers$1 = fold2(
         attrs,
         handlers2,
         (handlers3, attr) => {
@@ -3606,11 +3717,108 @@ var Span = class extends CustomType {
 var Link = class extends CustomType {
 };
 
+// build/dev/javascript/app/output/text_styling.mjs
+function is_link(str) {
+  return contains_string(str, "http");
+}
+function is_inline_code(str) {
+  return contains_string(str, "`");
+}
+function split_on_predicate(ls, predicate) {
+  return split_while(
+    ls,
+    (x) => {
+      let _pipe = predicate(x);
+      return negate(_pipe);
+    }
+  );
+}
+function style_helper(loop$input, loop$output, loop$predictate, loop$default, loop$style_desc) {
+  while (true) {
+    let input2 = loop$input;
+    let output = loop$output;
+    let predictate = loop$predictate;
+    let default$ = loop$default;
+    let style_desc = loop$style_desc;
+    if (input2[1].hasLength(0)) {
+      let t = input2[0];
+      return append4(
+        output,
+        toList([default$.withFields({ text: join2(t, " ") })])
+      );
+    } else if (input2[0].hasLength(0)) {
+      let l = input2[1];
+      if (l.hasLength(0)) {
+        return output;
+      } else {
+        let x = l.head;
+        let xs = l.tail;
+        let styled = style_desc.withFields({ text: x });
+        loop$input = split_on_predicate(xs, predictate);
+        loop$output = append4(output, toList([styled]));
+        loop$predictate = predictate;
+        loop$default = default$;
+        loop$style_desc = style_desc;
+      }
+    } else {
+      let x = input2[0];
+      let xs = input2[1];
+      loop$input = split_on_predicate(xs, predictate);
+      loop$output = append4(
+        output,
+        toList([default$.withFields({ text: join2(x, " ") })])
+      );
+      loop$predictate = predictate;
+      loop$default = default$;
+      loop$style_desc = style_desc;
+    }
+  }
+}
+function style_text(text2, predictate, style_desc) {
+  let words = split3(text2.text, " ");
+  let input2 = split_on_predicate(words, predictate);
+  return style_helper(input2, toList([]), predictate, text2, style_desc);
+}
+function extract_link_params(str) {
+  let options = new Options(false, true);
+  let $ = compile("\\((.+)\\).\\[(.+)\\]", options);
+  if (!$.isOk()) {
+    throw makeError(
+      "let_assert",
+      "output/text_styling",
+      52,
+      "extract_link_params",
+      "Pattern match failed, no pattern matched the value.",
+      { value: $ }
+    );
+  }
+  let re = $[0];
+  let $1 = scan(re, str);
+  if ($1.hasLength(0)) {
+    return new None();
+  } else {
+    let x = $1.head;
+    let $2 = values(x.submatches);
+    if ($2.hasLength(2)) {
+      let x$1 = $2.head;
+      let y = $2.tail.head;
+      return new Some([replace(x$1, "%20", " "), y]);
+    } else {
+      return new None();
+    }
+  }
+}
+function buffer(str, buffer2, no) {
+  return repeat2(buffer2, no) + str;
+}
+
 // build/dev/javascript/app/types/model.mjs
 var Model2 = class extends CustomType {
-  constructor(state, valid_commands, input2, output, output_q, command_history, flag, pos, current_pos) {
+  constructor(state, status, status_q, valid_commands, input2, output, output_q, command_history, flag, pos, current_pos) {
     super();
     this.state = state;
+    this.status = status;
+    this.status_q = status_q;
     this.valid_commands = valid_commands;
     this.input = input2;
     this.output = output;
@@ -3632,6 +3840,8 @@ var InputsLocked = class extends CustomType {
 function init2() {
   return new Model2(
     new Loading(),
+    toList([]),
+    toList([]),
     new_command_data(),
     "",
     toList([]),
@@ -3644,16 +3854,18 @@ function init2() {
 }
 function startup(data) {
   let text2 = toList([
-    new Text2("[", "text-green-300", new Span()),
+    new Text2(buffer(" ", " ", 10), "", new Span()),
+    new Text2(buffer("[", "-", 52), "text-green-300", new Span()),
     new Text2("[", "text-green-400", new Span()),
     new Text2("ALL SYSTEMS GO", "text-green-500", new Span()),
     new Text2("]", "text-green-400", new Span()),
-    new Text2("]", "text-green-300", new Span())
+    new Text2("]", "text-green-300", new Span()),
+    new Text2(buffer("-", "-", 52), "text-green-300", new Span())
   ]);
   return init2().withFields({
     state: new GO(),
     valid_commands: data,
-    output_q: text2
+    status_q: text2
   });
 }
 function error(error2, model) {
@@ -3712,6 +3924,23 @@ var InitPrettyPrint = class extends CustomType {
   }
 };
 var ChainPrint = class extends CustomType {
+};
+var PrettyPrintStatus = class extends CustomType {
+  constructor(char, str) {
+    super();
+    this.char = char;
+    this.str = str;
+  }
+};
+var InitPrettyPrintStatus = class extends CustomType {
+  constructor(char, txt, model) {
+    super();
+    this.char = char;
+    this.txt = txt;
+    this.model = model;
+  }
+};
+var RelayStatus = class extends CustomType {
 };
 var FetchedData = class extends CustomType {
   constructor(data) {
@@ -3984,10 +4213,10 @@ function get_commands(dispatch) {
               let data = data_decoder[0];
               dispatch(new FetchedCommands(data));
             } else {
-              dispatch(new FetchFailed());
+              dispatch(new FetchedCommandsFailed());
             }
           } else {
-            dispatch(new FetchFailed());
+            dispatch(new FetchedCommandsFailed());
           }
           return resolve(new Ok(void 0));
         }
@@ -4008,98 +4237,6 @@ var scrollToBottom = (divId) => {
 };
 function openPDFInNewTab(link) {
   window.open("https://drive.google.com/file/d/1HJDEvwinORrVlJk80oL7NdPjmKcAhzO9/view", "_blank");
-}
-
-// build/dev/javascript/app/output/text_styling.mjs
-function is_link(str) {
-  return contains_string(str, "http");
-}
-function is_inline_code(str) {
-  return contains_string(str, "`");
-}
-function split_on_predicate(ls, predicate) {
-  return split_while(
-    ls,
-    (x) => {
-      let _pipe = predicate(x);
-      return negate(_pipe);
-    }
-  );
-}
-function style_helper(loop$input, loop$output, loop$predictate, loop$default, loop$style_desc) {
-  while (true) {
-    let input2 = loop$input;
-    let output = loop$output;
-    let predictate = loop$predictate;
-    let default$ = loop$default;
-    let style_desc = loop$style_desc;
-    if (input2[1].hasLength(0)) {
-      let t = input2[0];
-      return append4(
-        output,
-        toList([default$.withFields({ text: join2(t, " ") })])
-      );
-    } else if (input2[0].hasLength(0)) {
-      let l = input2[1];
-      if (l.hasLength(0)) {
-        return output;
-      } else {
-        let x = l.head;
-        let xs = l.tail;
-        let styled = style_desc.withFields({ text: x });
-        loop$input = split_on_predicate(xs, predictate);
-        loop$output = append4(output, toList([styled]));
-        loop$predictate = predictate;
-        loop$default = default$;
-        loop$style_desc = style_desc;
-      }
-    } else {
-      let x = input2[0];
-      let xs = input2[1];
-      loop$input = split_on_predicate(xs, predictate);
-      loop$output = append4(
-        output,
-        toList([default$.withFields({ text: join2(x, " ") })])
-      );
-      loop$predictate = predictate;
-      loop$default = default$;
-      loop$style_desc = style_desc;
-    }
-  }
-}
-function style_text(text2, predictate, style_desc) {
-  let words = split3(text2.text, " ");
-  let input2 = split_on_predicate(words, predictate);
-  return style_helper(input2, toList([]), predictate, text2, style_desc);
-}
-function extract_link_params(str) {
-  let options = new Options(false, true);
-  let $ = compile("\\((.+)\\).\\[(.+)\\]", options);
-  if (!$.isOk()) {
-    throw makeError(
-      "let_assert",
-      "output/text_styling",
-      52,
-      "extract_link_params",
-      "Pattern match failed, no pattern matched the value.",
-      { value: $ }
-    );
-  }
-  let re = $[0];
-  let $1 = scan(re, str);
-  if ($1.hasLength(0)) {
-    return new None();
-  } else {
-    let x = $1.head;
-    let $2 = values(x.submatches);
-    if ($2.hasLength(2)) {
-      let x$1 = $2.head;
-      let y = $2.tail.head;
-      return new Some([replace(x$1, "%20", " "), y]);
-    } else {
-      return new None();
-    }
-  }
 }
 
 // build/dev/javascript/app/output/text_rendering.mjs
@@ -4479,7 +4616,7 @@ function execute_command_with_flag(new_model, input2, flag) {
   }
 }
 function gen_help(command, max2) {
-  let buffer = concat2(repeat3(" ", max2 + 2 - length2(command.command)));
+  let buffer2 = concat2(repeat3(" ", max2 + 2 - length2(command.command)));
   return toList([
     new Text2(
       "[",
@@ -4492,7 +4629,7 @@ function gen_help(command, max2) {
       new Span()
     ),
     new Text2(
-      "]" + buffer,
+      "]" + buffer2,
       "py-2 font-bold Consolas text-purple-300",
       new Span()
     ),
@@ -4508,7 +4645,7 @@ function parse_help(model) {
         return length2(c.command);
       }
     );
-    return fold(lengths, 0, max);
+    return fold2(lengths, 0, max);
   })();
   let basic_help = (() => {
     let example = (() => {
@@ -4573,18 +4710,18 @@ function gen_command_help(command) {
           return length2(flag.flag);
         }
       );
-      return fold(lengths, 0, max);
+      return fold2(lengths, 0, max);
     })();
     let flags = (() => {
       let _pipe = map3(
         command.flags,
         (flag) => {
-          let buffer = concat2(
+          let buffer2 = concat2(
             repeat3(" ", max2 + 2 - length2(flag.flag))
           );
           return toList([
             new Text2(
-              flag.flag + buffer,
+              flag.flag + buffer2,
               "text-purple-300",
               new Span()
             ),
@@ -4777,6 +4914,87 @@ function download_pdf(model) {
   return render_text(model.withFields({ output_q: output_msg }));
 }
 
+// build/dev/javascript/app/output/status.mjs
+function after3(timeout, msg) {
+  return from(
+    (dispatch) => {
+      return after(timeout, () => {
+        return dispatch(msg);
+      });
+    }
+  );
+}
+function pretty_status(char, str, model) {
+  let $ = split4(model.status, length3(model.status) - 1);
+  let history = $[0];
+  let recent = $[1];
+  if (!recent.hasLength(1)) {
+    throw makeError(
+      "let_assert",
+      "output/status",
+      37,
+      "pretty_status",
+      "Pattern match failed, no pattern matched the value.",
+      { value: recent }
+    );
+  }
+  let output = recent.head;
+  if (str === "") {
+    return [
+      model.withFields({
+        status: append4(
+          history,
+          toList([output.withFields({ text: output.text + char })])
+        )
+      }),
+      after3(25, new RelayStatus())
+    ];
+  } else {
+    let split6 = pop_grapheme2(str);
+    if (split6.isOk()) {
+      let val = split6[0];
+      let model$1 = model.withFields({
+        status: append4(
+          history,
+          toList([output.withFields({ text: output.text + char })])
+        )
+      });
+      let effect = after3(0, new PrettyPrintStatus(val[0], val[1]));
+      return [model$1, effect];
+    } else {
+      return [
+        model.withFields({
+          status: append4(
+            history,
+            toList([output.withFields({ text: output.text + char })])
+          )
+        }),
+        after3(25, new RelayStatus())
+      ];
+    }
+  }
+}
+function init_pretty_status(char, line, model) {
+  let new_model = model.withFields({
+    status: append4(model.status, toList([line.withFields({ text: "" })]))
+  });
+  return pretty_status(char, line.text, new_model);
+}
+function relay_status(model) {
+  let $ = model.status_q;
+  if ($.hasLength(0)) {
+    return [model.withFields({ state: new GO() }), none()];
+  } else {
+    let first3 = $.head;
+    let rest = $.tail;
+    return init_pretty_status(
+      "",
+      first3,
+      model.withFields({ state: new InputsLocked(), status_q: rest })
+    );
+  }
+}
+
 // build/dev/javascript/app/app.mjs
 function init3(_) {
   return [init2(), from(get_commands)];
@@ -4784,11 +5002,11 @@ function init3(_) {
 function update(model, msg) {
   if (msg instanceof FetchedCommands) {
     let data = msg.data;
-    return render_text(startup(data));
+    return relay_status(startup(data));
   } else if (msg instanceof FetchedCommandsFailed) {
-    return render_text(
+    return relay_status(
       serious_error(
-        "Failed to correct init refresh page to restart",
+        "Failed to init correctly, refresh page to restart",
         model
       ).withFields({ state: new LoadingFailed() })
     );
@@ -4817,6 +5035,17 @@ function update(model, msg) {
     return init_pretty_print(char, txt, mod);
   } else if (msg instanceof ChainPrint) {
     return render_text(model);
+  } else if (msg instanceof PrettyPrintStatus) {
+    let char = msg.char;
+    let str = msg.str;
+    return pretty_status(char, str, model);
+  } else if (msg instanceof InitPrettyPrintStatus) {
+    let char = msg.char;
+    let txt = msg.txt;
+    let mod = msg.model;
+    return init_pretty_status(char, txt, mod);
+  } else if (msg instanceof RelayStatus) {
+    return relay_status(model);
   } else if (msg instanceof FetchedData) {
     let data = msg.data;
     return init_text_rendering(data, model);
@@ -4830,17 +5059,15 @@ function update(model, msg) {
 }
 function view(model) {
   let header = toList([
-    "      ___                          ___           ___           ___      ",
-    "     /  /\\             ___        /  /\\         /  /\\         /__/\\     ",
-    "    /  /:/_           /  /\\      /  /:/_       /  /::\\       |  |::\\    ",
-    "   /  /:/ /\\         /  /:/     /  /:/ /\\     /  /:/\\:\\      |  |:|:\\   ",
-    "  /  /:/ /::\\       /  /:/     /  /:/ /:/_   /  /:/~/:/    __|__|:|\\:\\  ",
-    " /__/:/ /:/\\:\\     /  /::\\    /__/:/ /:/ /\\ /__/:/ /:/___ /__/::::| \\:\\ ",
-    " \\  \\:\\/:/~/:/    /__/:/\\:\\   \\  \\:\\/:/ /:/ \\  \\:\\/:::::/ \\  \\:\\~~\\__\\/ ",
-    "  \\  \\::/ /:/  ___\\__\\/  \\:\\   \\  \\::/ /:/   \\  \\::/~~~~   \\  \\:\\       ",
-    "   \\__\\/ /:/  /__/\\    \\  \\:\\   \\  \\:\\/:/     \\  \\:\\        \\  \\:\\      ",
-    "     /__/:/   \\__\\/     \\__\\/    \\  \\::/       \\  \\:\\        \\  \\:\\     ",
-    "     \\__\\/                        \\__\\/         \\__\\/         \\__\\/ "
+    "_____/\\\\\\\\\\\\\\\\\\\\\\__________________/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\__/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\____/\\\\\\\\\\\\\\\\\\______/\\\\\\\\____________/\\\\\\\\_       ",
+    " ___/\\\\\\/////////\\\\\\_______________\\///////\\\\\\/////__\\/\\\\\\///////////___/\\\\\\///////\\\\\\___\\/\\\\\\\\\\\\________/\\\\\\\\\\\\_      ",
+    "  __\\//\\\\\\______\\///______________________\\/\\\\\\_______\\/\\\\\\_____________\\/\\\\\\_____\\/\\\\\\___\\/\\\\\\//\\\\\\____/\\\\\\//\\\\\\_     ",
+    "   ___\\////\\\\\\__________/\\\\\\\\\\\\\\\\\\\\\\_______\\/\\\\\\_______\\/\\\\\\\\\\\\\\\\\\\\\\_____\\/\\\\\\\\\\\\\\\\\\\\\\/____\\/\\\\\\\\///\\\\\\/\\\\\\/_\\/\\\\\\_    ",
+    "    ______\\////\\\\\\______\\///////////________\\/\\\\\\_______\\/\\\\\\///////______\\/\\\\\\//////\\\\\\____\\/\\\\\\__\\///\\\\\\/___\\/\\\\\\_   ",
+    "     _________\\////\\\\\\_______________________\\/\\\\\\_______\\/\\\\\\_____________\\/\\\\\\____\\//\\\\\\___\\/\\\\\\____\\///_____\\/\\\\\\_  ",
+    "      __/\\\\\\______\\//\\\\\\______________________\\/\\\\\\_______\\/\\\\\\_____________\\/\\\\\\_____\\//\\\\\\__\\/\\\\\\_____________\\/\\\\\\_ ",
+    "       _\\///\\\\\\\\\\\\\\\\\\\\\\/_______________________\\/\\\\\\_______\\/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_\\/\\\\\\______\\//\\\\\\_\\/\\\\\\_____________\\/\\\\\\_",
+    "        ___\\///////////_________________________\\///________\\///////////////__\\///________\\///__\\///______________\\///__"
   ]);
   return div(
     toList([
@@ -4864,47 +5091,64 @@ function view(model) {
               id("App-App-App")
             ]),
             toList([
-              figure(
-                toList([class$("font-consolas text-purple-500")]),
+              div(
+                toList([class$("flex justify-center items-center")]),
                 toList([
-                  pre(
-                    toList([class$("font-consolas")]),
+                  figure(
+                    toList([class$("font-consolas text-purple-500")]),
                     toList([
-                      text(join2(header, "\n")),
-                      span(
+                      pre(
+                        toList([class$("font-consolas")]),
+                        toList([text(join2(header, "\n"))])
+                      ),
+                      pre(
+                        toList([class$("font-mono py-2")]),
                         toList([
-                          class$("font-mono text-purple-400 drop-shadow-glow")
+                          span(
+                            toList([]),
+                            toList([
+                              text(
+                                " " + (() => {
+                                  let _pipe = buffer(" Type ", "=", 36);
+                                  return buffer(_pipe, " ", 9);
+                                })()
+                              )
+                            ])
+                          ),
+                          span(
+                            toList([class$("text-purple-300")]),
+                            toList([text("'help'")])
+                          ),
+                          span(
+                            toList([]),
+                            toList([
+                              text(
+                                " to see the list of available commands. " + buffer(
+                                  "\n",
+                                  "=",
+                                  35
+                                )
+                              )
+                            ])
+                          )
+                        ])
+                      ),
+                      pre(
+                        toList([
+                          class$(
+                            "whitespace-pre-wrap font-mono text-purple-500"
+                          ),
+                          id("status")
                         ]),
-                        toList([text("\xA9 2024")])
-                      )
-                    ])
-                  ),
-                  pre(
-                    toList([class$("font-mono py-2")]),
-                    toList([
-                      span(
-                        toList([]),
-                        toList([text("============== Type ")])
-                      ),
-                      span(
-                        toList([class$("text-purple-300")]),
-                        toList([text("'help'")])
-                      ),
-                      span(
-                        toList([]),
-                        toList([
-                          text(
-                            " to see the list of available commands. ===============\n"
-                          )
-                        ])
-                      ),
-                      span(
-                        toList([class$("text-purple-300")]),
-                        toList([
-                          text(
-                            "                                                                  made in gleam \u2605"
-                          )
-                        ])
+                        map3(
+                          model.status,
+                          (line) => {
+                            return span(
+                              toList([class$(line.style)]),
+                              toList([text(line.text)])
+                            );
+                          }
+                        )
                       )
                     ])
                   )
@@ -5034,7 +5278,7 @@ function main() {
     throw makeError(
       "let_assert",
       "app",
-      25,
+      26,
       "main",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }
