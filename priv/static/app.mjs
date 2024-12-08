@@ -39,7 +39,6 @@ var List = class {
     }
     return desired === 0;
   }
-  // @internal
   countLength() {
     let length5 = 0;
     for (let _ of this)
@@ -238,7 +237,6 @@ function makeError(variant, module, line, fn, message, extra) {
   error2.gleam_error = variant;
   error2.module = module;
   error2.line = line;
-  error2.function = fn;
   error2.fn = fn;
   for (let k in extra)
     error2[k] = extra[k];
@@ -3784,11 +3782,11 @@ function extract_link_params(str) {
   let $ = compile("\\((.+)\\).\\[(.+)\\]", options);
   if (!$.isOk()) {
     throw makeError(
-      "let_assert",
+      "assignment_no_match",
       "output/text_styling",
       52,
       "extract_link_params",
-      "Pattern match failed, no pattern matched the value.",
+      "Assignment pattern did not match",
       { value: $ }
     );
   }
@@ -3960,11 +3958,11 @@ function fetch_json(api, dispatch) {
   let $ = to(api);
   if (!$.isOk()) {
     throw makeError(
-      "let_assert",
+      "assignment_no_match",
       "api/api",
       12,
       "fetch_json",
-      "Pattern match failed, no pattern matched the value.",
+      "Assignment pattern did not match",
       { value: $ }
     );
   }
@@ -4077,11 +4075,11 @@ function get_commands(dispatch) {
   let $ = to("https://api.jsonbin.io/v3/b/670da6a9acd3cb34a89703a7");
   if (!$.isOk()) {
     throw makeError(
-      "let_assert",
+      "assignment_no_match",
       "api/api",
       82,
       "get_commands",
-      "Pattern match failed, no pattern matched the value.",
+      "Assignment pattern did not match",
       { value: $ }
     );
   }
@@ -4256,11 +4254,11 @@ function pretty_print(char, str, model) {
   let recent = $[1];
   if (!recent.hasLength(1)) {
     throw makeError(
-      "let_assert",
+      "assignment_no_match",
       "output/text_rendering",
       36,
       "pretty_print",
-      "Pattern match failed, no pattern matched the value.",
+      "Assignment pattern did not match",
       { value: recent }
     );
   }
@@ -4930,11 +4928,11 @@ function pretty_status(char, str, model) {
   let recent = $[1];
   if (!recent.hasLength(1)) {
     throw makeError(
-      "let_assert",
+      "assignment_no_match",
       "output/status",
       37,
       "pretty_status",
-      "Pattern match failed, no pattern matched the value.",
+      "Assignment pattern did not match",
       { value: recent }
     );
   }
@@ -5276,11 +5274,11 @@ function main() {
   let $ = start2(app, "#app", void 0);
   if (!$.isOk()) {
     throw makeError(
-      "let_assert",
+      "assignment_no_match",
       "app",
       26,
       "main",
-      "Pattern match failed, no pattern matched the value.",
+      "Assignment pattern did not match",
       { value: $ }
     );
   }

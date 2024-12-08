@@ -50,9 +50,9 @@ fn update(model: Model, msg: Msg) -> #(Model, effect.Effect(Msg)) {
         msg.InitPrettyPrintStatus(char, txt, mod) -> status.init_pretty_status(char, txt, mod)
         msg.RelayStatus                           -> status.relay_status(model)
         //Api Calls
-        msg.FetchedData(data)     -> rend.init_text_rendering(data, model)
-        msg.FetchFailed           -> rend.render_text(mdl.serious_error("Failed to retrive data", model))
-        msg.DownloadPDF           -> pdf.download_pdf(model)
+        msg.FetchedData(data) -> rend.init_text_rendering(data, model)
+        msg.FetchFailed       -> rend.render_text(mdl.serious_error("Failed to retrive data", model))
+        msg.DownloadPDF       -> pdf.download_pdf(model)
     }
 }
 
