@@ -30,7 +30,7 @@ pub fn init_pretty_print(char: String, line: text.Text, model: Model) -> #(Model
 }
 
 pub fn pretty_print(char: String, str: String, model: Model) -> #(Model, effect.Effect(Msg)) {
-    anchor("App-App-App")
+    anchor("crt")
     // First we want to get the lastest output field
     let #(history, recent) = l.split(model.output, {l.length(model.output) - 1})
     let assert [output] = recent

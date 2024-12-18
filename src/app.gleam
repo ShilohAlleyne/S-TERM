@@ -78,50 +78,54 @@ fn view(model: Model) {
                 [class("p-5 absolute top-0 bottom-0 w-full selection:bg-purple-500 selection:text-neutral-900"), id("App-app")], 
                 [
                     h.div(
-                        [class("p-5 h-full w-full overflow-y-auto scroll-smooth box-border border-2 border-purple-800 text-lg"), id("App-App-App")], 
-                        [   h.div([class("flex justify-center items-center")],
-                            [
-                                // Header
-                                h.figure(
-                                    [class("font-consolas text-purple-500")],
-                                    [
-                                        h.pre(
-                                            [class("font-consolas")],
-                                            [text(s.join(header, "\n"))]
-                                        ),
-                                        h.pre(
-                                            [class("font-mono py-2")],
-                                            [
-                                                h.span(
-                                                    [],
-                                                    [text(
-                                                        " " <> ts.buffer(" Type ", "=", 36)
-                                                        |> ts.buffer(" ", 9))
-                                                    ],
-                                                ),
-                                                h.span(
-                                                    [class("text-purple-300")],
-                                                    [text("'help'")]
-                                                ),
-                                                h.span(
-                                                    [],
-                                                    [text(" to see the list of available commands. " <> ts.buffer("\n", "=", 35))]
-                                                ),
-                                            ]
-                                        ),
-                                        // Model Status
-                                        h.pre(
-                                            [class("whitespace-pre-wrap font-mono text-purple-500"), id("status")],
-                                            l.map(
-                                                model.status,
-                                                fn (line: text.Text) -> Element(Msg) {
-                                                    h.span([class(line.style)], [text(line.text)])
-                                                }
-                                            )
-                                        ),
-                                    ]
-                                ),
-                            ]),
+                        [class("crt p-5 h-full w-full overflow-y-auto scroll-smooth box-border border-2 border-purple-800 text-lg"), id("crt")],
+                        [
+                            h.div([class("scanline")], []),
+                            h.div(
+                                [class("flex justify-center items-center")],
+                                [
+                                    // Header
+                                    h.figure(
+                                        [class("font-consolas text-purple-500")],
+                                        [
+                                            h.pre(
+                                                [class("font-consolas")],
+                                                [text(s.join(header, "\n"))]
+                                            ),
+                                            h.pre(
+                                                [class("font-mono py-2")],
+                                                [
+                                                    h.span(
+                                                        [],
+                                                        [text(
+                                                            " " <> ts.buffer(" Type ", "=", 36)
+                                                            |> ts.buffer(" ", 9))
+                                                        ],
+                                                    ),
+                                                    h.span(
+                                                        [class("text-purple-300")],
+                                                        [text("'help'")]
+                                                    ),
+                                                    h.span(
+                                                        [],
+                                                        [text(" to see the list of available commands. " <> ts.buffer("\n", "=", 35))]
+                                                    ),
+                                                ]
+                                            ),
+                                            // Model Status
+                                            h.pre(
+                                                [class("whitespace-pre-wrap font-mono text-purple-500"), id("status")],
+                                                l.map(
+                                                    model.status,
+                                                    fn (line: text.Text) -> Element(Msg) {
+                                                        h.span([class(line.style)], [text(line.text)])
+                                                    }
+                                                )
+                                            ),
+                                        ]
+                                    ),
+                                ]
+                            ),
                             // Output
                             h.pre(
                                 [class("whitespace-pre-wrap font-mono text-purple-500"), id("output")],
@@ -142,10 +146,10 @@ fn view(model: Model) {
                             ),
                             //Input
                             h.pre(
-                                [class("flex pt-4")], 
+                                [class("flex pt-4")],
                                 [   //Runner
                                     h.pre(
-                                        [class("flex-none")], 
+                                        [class("flex-none")],
                                         [
                                             h.span(
                                                 [class("font-bold font-mono text-purple-300")],
