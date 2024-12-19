@@ -2,27 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* input { */
-/*     caret-color: transparent; /1* Hide the default caret *1/ */
-/*     position: relative; */
-/* } */
-
-/* input::after { */
-/*     content: ''; */
-/*     position: absolute; */
-/*     width: 10px; /1* Adjust the width to make the cursor wider *1/ */
-/*     height: 1em; */
-/*     background-color: Purple; /1* Change the color as needed *1/ */
-/*     animation: blink 1s step-end infinite; */
-/*     pointer-events: none; */
-/* } */
-
-/* @keyframes blink { */
-/*     50% { */
-/*         opacity: 0; */
-/*     } */
-/* } */
-
 /* Terminus Font */
 @import '/priv/static/fonts/fonts.css';
 
@@ -53,14 +32,47 @@ html {
  *
 */
 
-.App-App {
-    perspective: 500px;
+#app {
+    overflow: hidden;
 }
 
-.crt {
+#Background {
+    overflow: hidden;
+    background-color: black;
+    background-image: radial-gradient(
+        #1a061d, black 120%
+    );
+    height: 100vh;
+}
+
+
+#App-App {
+    perspective: 500px;
+    overflow: hidden;
+}
+
+#crt {
     transform-style: preserve-3d;
     transform: rotateY(-15deg);
     overflow-x: hidden;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5),
+               -1px -1px 2px rgba(0, 0, 0, 0.5),
+               2px 2px 2px rgba(0, 0, 0, 0.5),
+               -2px -2px 2px rgba(0, 0, 0, 0.5);
+}
+
+#bezel {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: none;
 }
 
 /* Scanlines */
@@ -80,6 +92,7 @@ html {
     background-size: 100% 8px;
     z-index: 2;
     pointer-events: none;
+    overflow: hidden;
 }
 
 /* Text shadow */
@@ -121,14 +134,3 @@ html {
         bottom: 0%;
     }
 }
-
-/*#screen {*/
-/*    position: relative;*/
-/*    width: 100%;*/
-/*    height: 67.5vmin;*/
-/*    border: 30px solid transparent;*/
-/*    border-image-source: url(./bezel.png);*/
-/*    border-image-slice: 30 fill;*/
-/*    border-image-outset: 0;*/
-/*    overflow: hidden;*/
-/*}*/
