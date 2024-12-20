@@ -40,9 +40,10 @@ html {
     overflow: hidden;
     background-color: black;
     background-image: radial-gradient(
-        #1a061d, black 120%
+        hsl(292, 66%, 7%) 0%, hsl(292, 66%, 2.3%) 70%
     );
     height: 100vh;
+    animation: Background 1s infinite;
 }
 
 
@@ -55,10 +56,7 @@ html {
     transform-style: preserve-3d;
     transform: rotateY(-15deg);
     overflow-x: hidden;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5),
-               -1px -1px 2px rgba(0, 0, 0, 0.5),
-               2px 2px 2px rgba(0, 0, 0, 0.5),
-               -2px -2px 2px rgba(0, 0, 0, 0.5);
+    text-shadow: 0 0 5px hsl(292, 66%, 7%);
 }
 
 #bezel {
@@ -84,26 +82,20 @@ html {
     left: 0;
     bottom: 0;
     right: 0;
-    background: linear-gradient(
-        to bottom,
-        rgba(18, 16, 16, 0) 50%,
-        rgba(0, 0, 0, 0.25) 50%
-    );
+    background: repeating-linear-gradient(transparent 0px 1px, hsl(154 0% 0%/.35) 3px 4px);
     background-size: 100% 8px;
     z-index: 2;
     pointer-events: none;
     overflow: hidden;
+    animation: flicker 0.066666666s linear infinite;
 }
 
-/* Text shadow */
-@keyframes textShadow {
-  0% {
-    text-shadow: 0.4389924193300864px 0 1px rgba(0,30,255,0.5), -0.4389924193300864px 0 1px rgba(255,0,80,0.3), 0 0 3px;
-  }
-  5% {
-    text-shadow: 2.7928974010788217px 0 1px rgba(0,30,255,0.5), -2.7928974010788217px 0 1px rgba(255,0,80,0.3), 0 0 3px;
-  }
-  /** etc */
+/* low-resolution screen overlay interlacing */
+@keyframes flicker {
+  0% {background-position: 0px 0px}
+  50% {background-position: 0px 0px}
+  51% {background-position: 0px 2px}
+  100% {background-position: 0px 2px}
 }
 
 /* Moving scanline */

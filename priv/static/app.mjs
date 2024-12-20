@@ -39,6 +39,7 @@ var List = class {
     }
     return desired === 0;
   }
+  // @internal
   countLength() {
     let length5 = 0;
     for (let _ of this)
@@ -109,24 +110,44 @@ var BitArray = class _BitArray {
   }
 };
 function byteArrayToInt(byteArray, start3, end, isBigEndian, isSigned) {
-  let value3 = 0;
-  if (isBigEndian) {
-    for (let i = start3; i < end; i++) {
-      value3 = value3 * 256 + byteArray[i];
+  const byteSize = end - start3;
+  if (byteSize <= 6) {
+    let value3 = 0;
+    if (isBigEndian) {
+      for (let i = start3; i < end; i++) {
+        value3 = value3 * 256 + byteArray[i];
+      }
+    } else {
+      for (let i = end - 1; i >= start3; i--) {
+        value3 = value3 * 256 + byteArray[i];
+      }
     }
+    if (isSigned) {
+      const highBit = 2 ** (byteSize * 8 - 1);
+      if (value3 >= highBit) {
+        value3 -= highBit * 2;
+      }
+    }
+    return value3;
   } else {
-    for (let i = end - 1; i >= start3; i--) {
-      value3 = value3 * 256 + byteArray[i];
+    let value3 = 0n;
+    if (isBigEndian) {
+      for (let i = start3; i < end; i++) {
+        value3 = (value3 << 8n) + BigInt(byteArray[i]);
+      }
+    } else {
+      for (let i = end - 1; i >= start3; i--) {
+        value3 = (value3 << 8n) + BigInt(byteArray[i]);
+      }
     }
-  }
-  if (isSigned) {
-    const byteSize = end - start3;
-    const highBit = 2 ** (byteSize * 8 - 1);
-    if (value3 >= highBit) {
-      value3 -= highBit * 2;
+    if (isSigned) {
+      const highBit = 1n << BigInt(byteSize * 8 - 1);
+      if (value3 >= highBit) {
+        value3 -= highBit * 2n;
+      }
     }
+    return Number(value3);
   }
-  return value3;
 }
 function byteArrayToFloat(byteArray, start3, end, isBigEndian) {
   const view2 = new DataView(byteArray.buffer);
@@ -237,6 +258,7 @@ function makeError(variant, module, line, fn, message, extra) {
   error2.gleam_error = variant;
   error2.module = module;
   error2.line = line;
+  error2.function = fn;
   error2.fn = fn;
   for (let k in extra)
     error2[k] = extra[k];
@@ -3782,11 +3804,11 @@ function extract_link_params(str) {
   let $ = compile("\\((.+)\\).\\[(.+)\\]", options);
   if (!$.isOk()) {
     throw makeError(
-      "assignment_no_match",
+      "let_assert",
       "output/text_styling",
       52,
       "extract_link_params",
-      "Assignment pattern did not match",
+      "Pattern match failed, no pattern matched the value.",
       { value: $ }
     );
   }
@@ -3958,11 +3980,11 @@ function fetch_json(api, dispatch) {
   let $ = to(api);
   if (!$.isOk()) {
     throw makeError(
-      "assignment_no_match",
+      "let_assert",
       "api/api",
       12,
       "fetch_json",
-      "Assignment pattern did not match",
+      "Pattern match failed, no pattern matched the value.",
       { value: $ }
     );
   }
@@ -4075,11 +4097,11 @@ function get_commands(dispatch) {
   let $ = to("https://api.jsonbin.io/v3/b/670da6a9acd3cb34a89703a7");
   if (!$.isOk()) {
     throw makeError(
-      "assignment_no_match",
+      "let_assert",
       "api/api",
       82,
       "get_commands",
-      "Assignment pattern did not match",
+      "Pattern match failed, no pattern matched the value.",
       { value: $ }
     );
   }
@@ -4248,17 +4270,17 @@ function after2(timeout, msg) {
   );
 }
 function pretty_print(char, str, model) {
-  scrollToBottom("App-App-App");
+  scrollToBottom("terminal");
   let $ = split4(model.output, length3(model.output) - 1);
   let history = $[0];
   let recent = $[1];
   if (!recent.hasLength(1)) {
     throw makeError(
-      "assignment_no_match",
+      "let_assert",
       "output/text_rendering",
       36,
       "pretty_print",
-      "Assignment pattern did not match",
+      "Pattern match failed, no pattern matched the value.",
       { value: recent }
     );
   }
@@ -4449,11 +4471,7 @@ function create_runner(input2) {
       "py-2 font-bold Consolas text-purple-300",
       new Span()
     ),
-    new Text2(
-      "\u{1F5F2}main",
-      "py-2 Consolas text-purple-400",
-      new Span()
-    ),
+    new Text2("\u{1F5F2}main", "py-2 Consolas text-purple-400", new Span()),
     new Text2(
       "] ",
       "py-2 font-bold Consolas text-purple-300",
@@ -4928,11 +4946,11 @@ function pretty_status(char, str, model) {
   let recent = $[1];
   if (!recent.hasLength(1)) {
     throw makeError(
-      "assignment_no_match",
+      "let_assert",
       "output/status",
       37,
       "pretty_status",
-      "Assignment pattern did not match",
+      "Pattern match failed, no pattern matched the value.",
       { value: recent }
     );
   }
@@ -5057,36 +5075,37 @@ function update(model, msg) {
 }
 function view(model) {
   let header = toList([
-    "_____/\\\\\\\\\\\\\\\\\\\\\\__________________/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\__/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\____/\\\\\\\\\\\\\\\\\\______/\\\\\\\\____________/\\\\\\\\_       ",
-    " ___/\\\\\\/////////\\\\\\_______________\\///////\\\\\\/////__\\/\\\\\\///////////___/\\\\\\///////\\\\\\___\\/\\\\\\\\\\\\________/\\\\\\\\\\\\_      ",
-    "  __\\//\\\\\\______\\///______________________\\/\\\\\\_______\\/\\\\\\_____________\\/\\\\\\_____\\/\\\\\\___\\/\\\\\\//\\\\\\____/\\\\\\//\\\\\\_     ",
-    "   ___\\////\\\\\\__________/\\\\\\\\\\\\\\\\\\\\\\_______\\/\\\\\\_______\\/\\\\\\\\\\\\\\\\\\\\\\_____\\/\\\\\\\\\\\\\\\\\\\\\\/____\\/\\\\\\\\///\\\\\\/\\\\\\/_\\/\\\\\\_    ",
-    "    ______\\////\\\\\\______\\///////////________\\/\\\\\\_______\\/\\\\\\///////______\\/\\\\\\//////\\\\\\____\\/\\\\\\__\\///\\\\\\/___\\/\\\\\\_   ",
-    "     _________\\////\\\\\\_______________________\\/\\\\\\_______\\/\\\\\\_____________\\/\\\\\\____\\//\\\\\\___\\/\\\\\\____\\///_____\\/\\\\\\_  ",
-    "      __/\\\\\\______\\//\\\\\\______________________\\/\\\\\\_______\\/\\\\\\_____________\\/\\\\\\_____\\//\\\\\\__\\/\\\\\\_____________\\/\\\\\\_ ",
-    "       _\\///\\\\\\\\\\\\\\\\\\\\\\/_______________________\\/\\\\\\_______\\/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_\\/\\\\\\______\\//\\\\\\_\\/\\\\\\_____________\\/\\\\\\_",
-    "        ___\\///////////_________________________\\///________\\///////////////__\\///________\\///__\\///______________\\///__"
+    "_____/\\\\\\\\\\\\\\\\\\\\\\__________________/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\__/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\____/\\\\\\\\\\\\\\\\\\______/\\\\\\\\____________/\\\\\\\\_         ",
+    " ___/\\\\\\/////////\\\\\\_______________\\///////\\\\\\/////__\\/\\\\\\///////////___/\\\\\\///////\\\\\\___\\/\\\\\\\\\\\\________/\\\\\\\\\\\\_        ",
+    "  __\\//\\\\\\______\\///______________________\\/\\\\\\_______\\/\\\\\\_____________\\/\\\\\\_____\\/\\\\\\___\\/\\\\\\//\\\\\\____/\\\\\\//\\\\\\_       ",
+    "   ___\\////\\\\\\__________/\\\\\\\\\\\\\\\\\\\\\\_______\\/\\\\\\_______\\/\\\\\\\\\\\\\\\\\\\\\\_____\\/\\\\\\\\\\\\\\\\\\\\\\/____\\/\\\\\\\\///\\\\\\/\\\\\\/_\\/\\\\\\_      ",
+    "    ______\\////\\\\\\______\\///////////________\\/\\\\\\_______\\/\\\\\\///////______\\/\\\\\\//////\\\\\\____\\/\\\\\\__\\///\\\\\\/___\\/\\\\\\_     ",
+    "     _________\\////\\\\\\_______________________\\/\\\\\\_______\\/\\\\\\_____________\\/\\\\\\____\\//\\\\\\___\\/\\\\\\____\\///_____\\/\\\\\\_    ",
+    "      __/\\\\\\______\\//\\\\\\______________________\\/\\\\\\_______\\/\\\\\\_____________\\/\\\\\\_____\\//\\\\\\__\\/\\\\\\_____________\\/\\\\\\_   ",
+    "       _\\///\\\\\\\\\\\\\\\\\\\\\\/_______________________\\/\\\\\\_______\\/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_\\/\\\\\\______\\//\\\\\\_\\/\\\\\\_____________\\/\\\\\\_  ",
+    "        ___\\///////////_________________________\\///________\\///////////////__\\///________\\///__\\///______________\\///__ "
   ]);
   return div(
     toList([
-      class$("m-0 leading-inherit bg-[#121212] min-h-screen"),
+      class$("p-50 m-0 leading-inherit bg-[#121212] min-h-screen"),
       id("Background")
     ]),
     toList([
+      div(toList([class$("scanline")]), toList([])),
       div(
         toList([
           class$(
-            "p-5 absolute top-0 bottom-0 w-full selection:bg-purple-500 selection:text-neutral-900"
+            "px-[4.5rem] py-[6.0rem] absolute top-0 bottom-0 w-full selection:bg-purple-500 selection:text-neutral-900"
           ),
-          id("App-app")
+          id("crt")
         ]),
         toList([
           div(
             toList([
               class$(
-                "p-5 h-full w-full overflow-y-auto scroll-smooth box-border border-2 border-purple-800 text-lg"
+                "crt p-5 h-full w-full overflow-y-auto scroll-smooth text-lg"
               ),
-              id("App-App-App")
+              id("terminal")
             ]),
             toList([
               div(
@@ -5274,11 +5293,11 @@ function main() {
   let $ = start2(app, "#app", void 0);
   if (!$.isOk()) {
     throw makeError(
-      "assignment_no_match",
+      "let_assert",
       "app",
       26,
       "main",
-      "Assignment pattern did not match",
+      "Pattern match failed, no pattern matched the value.",
       { value: $ }
     );
   }

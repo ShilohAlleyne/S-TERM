@@ -83,7 +83,7 @@ fn view(model: Model) {
                 [class("px-[4.5rem] py-[6.0rem] absolute top-0 bottom-0 w-full selection:bg-purple-500 selection:text-neutral-900"), id("crt")],
                 [
                     h.div(
-                        [class("crt p-5 h-full w-full overflow-y-auto scroll-smooth box-border border-2 border-purple-800 text-lg"), id("terminal")],
+                        [class("crt p-5 h-full w-full overflow-y-auto scroll-smooth text-lg"), id("terminal")],
                         [
                             h.div(
                                 [class("flex justify-center items-center")],
